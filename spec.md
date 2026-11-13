@@ -8,11 +8,11 @@
 
 Lớp: L3B · Track: T4 · Nhóm: nhomANH · Hạn nộp: 23:59 ngày 13/11/2026 (Asia/Saigon)
 
-| Họ và Tên     | Mã Học Viên |
-| ------------- | ----------- |
-| Lê Thanh Hà   | 2A202603901 |
-| Lã Quốc Nghị  | 2A202603947 |
-| Phạm Thanh An | 2A202603913 |
+| Họ và Tên     | Mã Học Viên | Nhiệm vụ |
+| ------------- | ----------- | -------- |
+| Lê Thanh Hà   | 2A202603901 | Viết §1, §2, §5.1; dựng prototype `index.html` (Ant Design); tích hợp/merge bài nộp; chụp `screenshot1.png` và `screenshot2.png`. Trong demo (§7.1): mở đầu lát cắt và bấm prototype. |
+| Lã Quốc Nghị  | 2A202603947 | Viết §3, §5.2, §6; soạn lời thoại AI (`AI_COPY` trong `prototype/index.html`). Trong demo (§7.1): nói câu trên màn hình khi Hà bấm Ca #1. |
+| Phạm Thanh An | 2A202603913 | Viết §4, §5.3–5.4, §7; chủ nhiệm kịch bản demo 4 phút. Trong demo (§7.1): trình bày mức tự chủ và nhận ca lạ. |
 
 ## §1. Lát cắt & phạm vi
 
@@ -292,7 +292,7 @@ Sơ đồ đã chốt: Màn 1 là chat người mua; Màn 2 là người bán v�
 
 ## §7. Demo
 
-Ca lạ thật do TA hoặc giảng viên đưa tại chỗ. Mục này là kịch bản 4 phút, đường prototype đi khi gặp ca chưa chuẩn bị, và hai ca luyện sẵn. Sau demo, điền ca đã nhận vào dòng trống cuối mục.
+Ca lạ thật do TA hoặc giảng viên đưa tại chỗ. Mục này là kịch bản 4 phút, đường prototype đi khi gặp ca chưa chuẩn bị, và hai ca luyện sẵn. Kết quả ca lạ lúc demo được ghi ở §7.3.
 
 ### 7.1. Bốn phút, ai nói gì
 
@@ -320,6 +320,6 @@ Bấm trên `prototype/index.html`. Ca chính: §2 #1 (mô tả bị sửa). Đ�
 
 ### 7.3. Ca lạ nhận được lúc demo
 
-- Ca TA/giảng viên đưa: *(điền sau demo)*
-- Prototype đã làm gì:
-- Nhóm có đổi ý mức nào trong §4 không:
+- Ca TA/giảng viên đưa: Không có ca lạ nào được TA/giảng viên đưa ra trong buổi demo.
+- Prototype đã làm gì: Không áp dụng.
+- Nhóm có đổi ý mức nào trong §4 không: Không áp dụng.

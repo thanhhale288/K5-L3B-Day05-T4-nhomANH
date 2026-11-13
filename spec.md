@@ -4,9 +4,19 @@
 >
 > **Một quyết định = bốn ý:** đã cân nhắc phương án nào · chọn phương án nào · vì sao · loại các phương án kia vì sao. Bằng chứng = lập luận trỏ về một chỗ cụ thể: tool nào, dòng dữ liệu nào của track, điều gì trong mục "Sản phẩm thật hôm nay", chỗ nào trên prototype (ảnh đánh số). Không chạy agent.
 
-```markdown
-# Bài nộp LAB5 — [Track] · Nhóm [tên]
-[Danh sách thành viên và việc mỗi người làm — copy bảng từ README]
+# Bài nộp LAB5 — T4 · Nhóm nhomANH
+
+Lớp: L3B · Track: T4 · Nhóm: nhomANH · Hạn nộp: 23:59 ngày 13/11/2026 (Asia/Saigon)
+
+> **Lưu ý:** Tên và mã học viên còn thiếu — điền trước khi nộp. Một trong ba thành viên là **Hà Lê**. Phân công đề xuất theo bài mẫu L3A (có thể đổi sau khi biết tên).
+
+| Họ và Tên | Mã Học Viên | Việc đã làm |
+|---|---|---|
+| Thành viên A (điền tên; một trong ba người là Hà Lê) | (điền mã) | S2, S5 & prototype (main) |
+| Thành viên B (điền tên) | (điền mã) | S3, S5 (sub), S6 |
+| Thành viên C (điền tên) | (điền mã) | S4, S5 (sub), S7 |
+
+Cả nhóm cùng làm §1. Chi tiết checklist từng người: xem `plan.md`.
 
 ## §1. Lát cắt & phạm vi
 - Lát cắt (chép từ track).
@@ -46,4 +56,3 @@ Thêm:
 
 ## §7. Demo
 - Ca lạ nhận được ở demo: prototype đã làm gì, và nhóm có đổi ý gì sau ca đó không.
-```

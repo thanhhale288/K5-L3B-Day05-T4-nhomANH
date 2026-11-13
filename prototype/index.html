@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trò chuyện với Shopee — Trợ lý Khiếu nại Hàng không đúng mô tả (Lab T4)</title>
+  <title>Trợ lý Khiếu nại Shopee (AI Assistant) — Lab T4</title>
   
   <!-- Ant Design Reset CSS (v5.22.7 pinned) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.22.7/dist/reset.css" />
@@ -160,7 +160,7 @@
     .deadline-banner {
       background: #FFFBE6;
       border-bottom: 1px solid #FFE58F;
-      padding: 7px 16px;
+      padding: 8px 16px;
       font-size: 12.5px;
       color: #D46B08;
       display: flex;
@@ -246,6 +246,22 @@
       font-size: 12px;
     }
 
+    /* Step Timeline Box (Ca 7) */
+    .progress-box {
+      background: #FFFFFF;
+      border: 1px solid #E8E8E8;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .progress-step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+
     /* Chat Footer (Action Bar) */
     .chat-footer {
       background: #FFFFFF;
@@ -318,7 +334,7 @@
     const { useState, useEffect } = React;
     const {
       ConfigProvider, Layout, Card, Tag, Button, Tabs, Badge,
-      Alert, Space, Divider, Typography, Row, Col, Tooltip, Empty, Spin
+      Alert, Space, Divider, Typography, Row, Col, Tooltip, Empty, Spin, Modal
     } = antd;
     const { Text, Title, Paragraph } = Typography;
 
@@ -331,51 +347,67 @@
     } = icons;
 
     /**
-     * BẢNG COPY AI DUY NHẤT (Nguồn sự thật ngôn ngữ)
-     * Toàn bộ câu từ của AI và các nhãn chính thức nằm tại đây,
-     * sẵn sàng dán trực tiếp từ ai-copy.md của Nghi.
+     * BẢNG COPY AI DUY NHẤT (Nguồn sự thật ngôn ngữ — nguyên văn từ ai-copy.md của Nghi)
+     * Toàn bộ câu từ của AI, tiêu đề, nhãn, nút bấm khớp từng chữ, không diễn giải lại.
      */
     const AI_COPY = {
-      // Kịch bản 1: Người bán sửa mô tả sau bán (Ca đắt #1)
-      ca1_user_msg: "Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Không đúng mô tả.",
-      ca1_ai_reply: "Shopee đã tiếp nhận khiếu nại của bạn về đơn hàng Nồi chiên không dầu. Qua kiểm tra lịch sử dữ liệu, hệ thống đối chiếu trực tiếp với nội dung mô tả sản phẩm tại thời điểm bạn đặt hàng. Do có sự sai lệch thông số giữa bản mô tả lúc đặt và mô tả hiện tại của Shop, Shopee đã lập hồ sơ đề xuất hoàn tiền và gửi yêu cầu xác minh tới Shop. Bạn vui lòng giữ nguyên hiện trạng sản phẩm.",
-      ca1_compare_at_order: "Dung tích nồi: 6 Lít (dung tích lòng nồi 6L chuẩn)",
-      ca1_compare_current: "Thể tích phủ bì: 6 Lít, lòng nồi thực tế: 5 Lít (Shop đã cập nhật lại sau khi bán — dữ liệu dựng)",
-      ca1_status: "Mâu thuẫn mô tả lúc đặt",
-
-      // Kịch bản 7: Doạ bóc phốt TikTok (Ca đắt #2)
-      ca7_user_msg: "Áo nhận được màu khác xa hình. Trong 2 tiếng không hoàn tiền thì tôi đăng bài bóc phốt lên TikTok 500k view tẩy chay Shopee!",
-      ca7_ai_reply: "Shopee rất thấu hiểu sự sốt ruột và bất tiện của bạn. Tuy nhiên, theo quy chế sàn nhằm đảm bảo tính trung lập và công bằng, lời đe dọa không phải căn cứ để ra quyết định hoàn tiền ngay. Shopee đã kích hoạt quy trình đối soát bằng chứng cho cả hai bên và ấn định thời hạn phản hồi cho Người bán (thời gian đếm ngược bên dưới). Sau thời hạn này nếu Shop không có phản hồi hợp lệ, Shopee sẽ xử lý hoàn tiền theo quy định.",
-      ca7_status: "Đang chờ đối chất — Lời doạ không phải căn cứ",
-
-      // Kịch bản 8: Người bán đúng (Demo bắt buộc đề bài)
-      ca8_user_msg: "Khách nhận áo khoác than: Màu áo nhận được tối hơn hình một chút, vải không như tưởng tượng. Shop giải quyết hoàn tiền gấp!",
-      ca8_ai_reply: "Shopee đã đối chiếu video đóng hàng và tem mã vạch do Người bán cung cấp với nội dung mô tả lúc đặt mua. Kết quả xác minh: Sản phẩm thực tế có tem mã vạch, chất liệu vải và phân loại màu khớp 100% với thông tin đơn hàng lúc đặt. Chưa đủ căn cứ xác định hàng sai mô tả để giải quyết hoàn tiền ngay. Nếu bạn có thêm video đồng kiểm mở hàng chứng minh sai khác, vui lòng gửi bổ sung hoặc bấm 'Gặp nhân viên hỗ trợ' bên dưới.",
-      ca8_status: "Chưa đủ căn cứ xác định hàng sai mô tả",
-      ca8_seller_evidence: "Video đóng hàng + tem quét mã vạch xác nhận đúng màu rêu đậm và mã sản phẩm #AK-098 khớp 100% mô tả lúc đặt.",
-
-      // Tool status messages
-      evidence_request_sent: "Đã gửi mẫu xin bằng chứng (tin đã tới — không thu hồi nội dung)",
-      escalate_done: "Đã chuyển hồ sơ tới Trưởng nhóm CSKH (chuyen_truong_nhom)",
-      escalate_undo: "Hoàn tác chuyển nhân viên (quay lại trợ lý AI)",
-      refund_drafted: "Đã lập đề xuất hoàn tiền (de_xuat_hoan_tien — đề xuất tách bước của nhóm)",
-      refund_pending: "Chờ nhân viên sàn duyệt (soan_hoan_tien)",
-      refund_approved: "Đã duyệt hoàn tiền cho người mua (Khó: tiền đã về người mua — không thể thu hồi)",
-      refund_rejected: "Đã từ chối đề xuất hoàn tiền — yêu cầu bổ sung bằng chứng",
-
-      // Global markers & labels
-      footer_ai: "Được tạo bởi AI",
-      deadline_prefix: "Thời hạn phản hồi người bán còn lại: ",
-      deadline_suffix: " (dữ liệu dựng giả lập)",
+      // Chung (mọi màn)
+      header_chat: "Trợ lý Khiếu nại Shopee (AI Assistant)",
+      badge_ai: "Trợ lý AI · Hỗ trợ đối soát — không tự hoàn tiền",
       meet_staff_btn: "Gặp nhân viên hỗ trợ",
+      chip_xem_ho_so: "Xem chi tiết hồ sơ",
+      chip_gui_them_chung: "Gửi thêm bằng chứng",
+      chip_xem_tien_trinh: "Xem tiến trình đối soát",
+      footer_ai: "Được tạo bởi AI", // Key UI cần nhưng ai-copy.md không có; giữ đúng nhãn Shopee chuẩn
+
+      // Ca 1 — Kịch bản #1 · Shop sửa mô tả (Nồi 6L) · DEMO CHÍNH
+      ca1_user_msg: "Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Không đúng mô tả.",
+      ca1_ai_reply: "Shopee đã tiếp nhận khiếu nại của bạn về sản phẩm Nồi chiên. Qua đối chiếu với nội dung mô tả sản phẩm tại thời điểm bạn đặt mua, hệ thống nhận thấy thông số dung tích có sự khác biệt so với mô tả hiện tại của Shop. Để đảm bảo quyền lợi công bằng cho cả hai bên, Shopee đã chuyển hồ sơ này tới Chuyên viên khiếu nại xử lý ưu tiên. Bạn vui lòng giữ nguyên hiện trạng sản phẩm và theo dõi tiến trình trong mục này. Mình không tự hoàn tiền và không tự từ chối khiếu nại ở bước này.",
+      ca1_compare_col_left: "Mô tả lúc đặt",
+      ca1_compare_col_right: "Mô tả hiện tại",
+      ca1_compare_at_order: "Dung tích nồi: 6L",
+      ca1_compare_current: "Thể tích phủ bì: 6L · Lòng nồi: 5L",
+      ca1_status: "[Đã chuyển Chuyên viên xử lý ưu tiên]",
+
+      // Ca 2 — Kịch bản #7 · Doạ bóc phốt · DEMO CHÍNH
+      ca7_user_msg: "Áo nhận được màu khác xa hình. Trong 2 tiếng không hoàn tiền thì tôi đăng bài bóc phốt lên TikTok 500k view tẩy chay Shopee!",
+      ca7_ai_reply: "Shopee rất thấu hiểu sự sốt ruột của bạn. Tuy nhiên, để đảm bảo tính công bằng theo quy chế sàn, mọi yêu cầu Trả hàng/Hoàn tiền cần đối soát chứng cứ khách quan và dành thời hạn hợp lệ để Người bán phản hồi. Shopee đã ghi nhận khiếu nại và ấn định thời hạn phản hồi cho Người bán (thời gian còn lại hiển thị bên dưới). Lời cảnh báo công khai không phải căn cứ để hoàn tiền ngay. Bạn có thể bổ sung ảnh/video lệch màu so với mô tả lúc đặt; sau thời hạn, chuyên viên sẽ đối soát theo chứng cứ — không theo áp lực truyền thông.",
+      ca7_deadline_line: "Đang chờ Người bán phản hồi · Thời hạn còn lại: 22 giờ 15 phút",
+      ca7_deadline_prefix: "Đang chờ Người bán phản hồi · Thời hạn còn lại: ",
+      ca7_deadline_suffix: " (dữ liệu dựng giả lập — không phải SLA chính thức từ track)",
+      ca7_progress_1: "Đã nhận khiếu nại",
+      ca7_progress_2: "Đang chờ shop phản hồi",
+      ca7_progress_3: "Chuyên viên đối soát (sau hạn / khi đủ chứng)",
+      ca7_status: "Đang chờ shop phản hồi · Không hoàn theo doạ",
+
+      // Ca phụ — Kịch bản #8 · Người bán đúng (tem khớp) · đường tắt demo
+      ca8_user_msg: "Áo khoác màu tối hơn hình một chút, mình muốn hoàn tiền.",
+      ca8_ai_reply: "Theo mô tả lúc bạn đặt và bằng chứng Shop gửi (video đóng hàng / tem mã khớp mô tả lúc đặt), hiện chưa đủ căn cứ xác định sản phẩm sai mô tả. Shopee không hoàn tiền chỉ vì cảm nhận lệch nhẹ so với ảnh. Bạn có thể bổ sung bằng chứng khách quan khác trong hạn còn lại, hoặc gặp nhân viên nếu cần giải thích thêm.",
+      ca8_status: "[Chưa đủ căn cứ hoàn tiền]",
+
+      // Màn 2 — Người bán / Nhân viên duyệt [4] (Bonus)
+      seller_notice: "Đơn #[DEMO-001] có khiếu nại \"Không đúng mô tả\".\nThời hạn phản hồi còn lại: 22 giờ 15 phút.\nVui lòng gửi bằng chứng đối chất (ảnh/video đóng hàng, tem, mô tả lúc đặt nếu có).",
+      seller_send_evidence_btn: "Gửi bằng chứng đối chất",
+      staff_proposal_label: "Đề xuất của trợ lý AI: ",
+      staff_proposal_none: "Chưa đề xuất hoàn",
+      staff_proposal_pending: "Đề xuất hoàn — chờ duyệt",
+      staff_evidence_note: "Căn cứ đính kèm: thẻ mô tả lúc đặt · ảnh buyer · phản hồi shop",
+      staff_approve: "Phê duyệt hoàn tiền",
+      staff_request_more: "Yêu cầu bổ sung",
+      staff_reject: "Từ chối đề xuất",
+
+      // Các thông báo phụ trợ cho thao tác tương tác
+      evidence_request_sent: "Đã gửi mẫu xin bằng chứng (tin đã tới — không thu hồi nội dung)",
+      escalate_done: "Đã chuyển Chuyên viên xử lý ưu tiên (chuyen_truong_nhom)",
+      escalate_undo: "Hoàn tác chuyển nhân viên (quay lại trợ lý AI)",
       not_enough_grounds: "Chưa đủ căn cứ xác định hàng sai mô tả"
     };
 
     // Dữ liệu đơn hàng giả tương ứng từng kịch bản
     const ORDER_FIXTURES = {
       1: {
-        id: "#SPX-6523910",
-        name: "Nồi chiên không dầu Lock&Lock 6L Điện tử",
+        id: "#[DEMO-001]",
+        name: "Nồi chiên không dầu 6L Điện tử",
         variant: "Màu Đen bóng · Mã NC-600E",
         shop: "Gia Dụng Thông Minh Mall",
         price: "1.250.000 đ",
@@ -383,7 +415,7 @@
         status: "Đã giao hàng thành công"
       },
       7: {
-        id: "#SPX-7810425",
+        id: "#[DEMO-001]",
         name: "Áo khoác Blazer nữ màu Be sữa Hàn Quốc",
         variant: "Size L · Màu Be sữa cao cấp",
         shop: "Thời Trang Nữ ChicStore",
@@ -392,8 +424,8 @@
         status: "Đã giao hàng thành công"
       },
       8: {
-        id: "#SPX-8921104",
-        name: "Áo phao đại hàn nam màu rêu đậm chần bông",
+        id: "#[DEMO-001]",
+        name: "Áo phao đại hàn nam màu rêu chần bông",
         variant: "Size XL · Màu Xanh rêu · Mã #AK-098",
         shop: "Hanoi Winter Official",
         price: "680.000 đ",
@@ -409,22 +441,26 @@
       // Kịch bản đang chọn: 1, 7, hoặc 8
       const [scenario, setScenario] = useState(1);
 
-      // Loading giả lập typing của AI khi đổi kịch bản (300-400ms)
+      // Loading giả lập typing của AI khi đổi kịch bản (350ms)
       const [isTyping, setIsTyping] = useState(false);
 
-      // Trạng thái tool chuyen_truong_nhom (HAX G10)
-      const [escalated, setEscalated] = useState(false);
+      // Trạng thái tool chuyen_truong_nhom (HAX G10):
+      // Ở Ca 1: mặc định là TRUE (vì AI tự gọi chuyen_truong_nhom theo ai-copy.md)
+      // Ở Ca 7 & 8: mặc định là FALSE
+      const [escalated, setEscalated] = useState(true);
 
-      // Trạng thái tool soan_hoan_tien: 'none' | 'pending' | 'approved' | 'rejected'
-      // Ca 1 mặc định: 'pending' (Chờ duyệt)
-      // Ca 7 & 8 mặc định: 'none'
-      const [refundState, setRefundState] = useState("pending");
+      // Trạng thái đề xuất hoàn tiền: 'none' | 'pending' | 'approved' | 'rejected' | 'requested_more'
+      // Theo ai-copy.md: Ở cả Ca 1, Ca 7, Ca 8, AI đều KHÔNG tự lập nháp soan_hoan_tien -> mặc định 'none'
+      const [refundState, setRefundState] = useState("none");
 
       // Bằng chứng người bán đã nộp tại Màn 2
       const [sellerEvidenceSubmitted, setSellerEvidenceSubmitted] = useState(false);
 
-      // Countdown timer giả lập (14 giờ 29 phút 45 giây)
-      const [countdownSeconds, setCountdownSeconds] = useState(14 * 3600 + 29 * 60 + 45);
+      // Countdown timer giả lập bắt đầu đúng 22 giờ 15 phút (80100 giây) như ai-copy.md
+      const [countdownSeconds, setCountdownSeconds] = useState(22 * 3600 + 15 * 60);
+
+      // Modal chi tiết hồ sơ
+      const [infoModalVisible, setInfoModalVisible] = useState(false);
 
       useEffect(() => {
         const timer = setInterval(() => {
@@ -433,7 +469,7 @@
         return () => clearInterval(timer);
       }, []);
 
-      // Format countdown time
+      // Format countdown time: 22 giờ 14 phút
       const formatCountdown = (totalSec) => {
         const h = Math.floor(totalSec / 3600);
         const m = Math.floor((totalSec % 3600) / 60);
@@ -445,17 +481,22 @@
       const handleSelectScenario = (scenId) => {
         setIsTyping(true);
         setScenario(scenId);
-        setEscalated(false);
 
         if (scenId === 1) {
-          setRefundState("pending");
+          // Ca 1: tự gọi chuyen_truong_nhom, không gọi soan_hoan_tien
+          setEscalated(true);
+          setRefundState("none");
           setSellerEvidenceSubmitted(false);
         } else if (scenId === 7) {
+          // Ca 7: yeu_cau_bang_chung, không soan_hoan_tien
+          setEscalated(false);
           setRefundState("none");
           setSellerEvidenceSubmitted(false);
         } else if (scenId === 8) {
+          // Ca 8: không soan_hoan_tien, seller có tem khớp
+          setEscalated(false);
           setRefundState("none");
-          setSellerEvidenceSubmitted(true); // Ca 8 shop đã có tem mã vạch khớp
+          setSellerEvidenceSubmitted(true);
         }
 
         setTimeout(() => {
@@ -484,7 +525,7 @@
               </div>
               <span style={{ color: "#E0E0E0" }}>|</span>
               <span style={{ fontWeight: 600, fontSize: 14, color: "#333333" }}>
-                Trò chuyện với Shopee — Khiếu nại hàng không đúng mô tả
+                {AI_COPY.header_chat}
               </span>
               <Tag color="orange" style={{ fontWeight: 500, fontSize: 11 }}>
                 Lớp L3B · Track T4 · Nhóm nhomANH
@@ -506,7 +547,7 @@
                 onClick={() => setActiveTab("seller_platform")}
                 icon={<AuditOutlined />}
               >
-                <span className="marker-badge-inline">[4]</span> Màn 2: Kênh Người Bán & Sàn Duyệt
+                <span className="marker-badge-inline">[4]</span> Màn 2: Người bán / Nhân viên duyệt [4] (Bonus)
               </Button>
             </div>
           </header>
@@ -533,12 +574,12 @@
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <Text strong style={{ color: scenario === 1 ? "#EE4D2D" : "#222" }}>
-                      1. Sửa mô tả (Nồi 6L vs 5L)
+                      Ca 1 — Shop sửa mô tả (Nồi 6L)
                     </Text>
-                    <Tag color="volcano" style={{ fontSize: 10, margin: 0 }}>Ca đắt #1</Tag>
+                    <Tag color="volcano" style={{ fontSize: 10, margin: 0 }}>DEMO CHÍNH</Tag>
                   </div>
                   <Text style={{ fontSize: 11, color: "#666" }}>
-                    Lớp ① Nguồn sự thật: Shop âm thầm sửa mô tả sau khi bán. AI phát hiện mâu thuẫn mô tả lúc đặt.
+                    Kịch bản #1: AI phát hiện lệch thông số lúc đặt vs hiện tại → Tự gọi chuyen_truong_nhom, không tự hoàn/từ chối.
                   </Text>
                 </div>
 
@@ -549,12 +590,12 @@
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <Text strong style={{ color: scenario === 7 ? "#EE4D2D" : "#222" }}>
-                      2. Doạ bóc phốt TikTok
+                      Ca 2 — Doạ bóc phốt
                     </Text>
-                    <Tag color="volcano" style={{ fontSize: 10, margin: 0 }}>Ca đắt #2</Tag>
+                    <Tag color="volcano" style={{ fontSize: 10, margin: 0 }}>DEMO CHÍNH</Tag>
                   </div>
                   <Text style={{ fontSize: 11, color: "#666" }}>
-                    Lớp ④ Đặc thù domain: Khách ép hoàn tiền trong 2h. Lời đe dọa không phải căn cứ hoàn tiền.
+                    Kịch bản #7: Doạ TikTok 500k view trong 2h. Lời cảnh báo không phải căn cứ hoàn ngay → Yêu cầu chứng 2 phía + hẹn giờ shop.
                   </Text>
                 </div>
 
@@ -565,12 +606,12 @@
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <Text strong style={{ color: scenario === 8 ? "#EE4D2D" : "#222" }}>
-                      3. Người bán đúng (Tem khớp)
+                      Ca phụ — Người bán đúng (tem khớp)
                     </Text>
-                    <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>Demo Đề</Tag>
+                    <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>Đường tắt demo</Tag>
                   </div>
                   <Text style={{ fontSize: 11, color: "#666" }}>
-                    Lớp ④ Đặc thù domain: Shop giao đúng mô tả lúc đặt. AI dám nói chưa đủ căn cứ hoàn tiền.
+                    Kịch bản #8: Áo tối hơn hình một chút. Tem/mã khớp mô tả lúc đặt → Dám nói chưa đủ căn cứ hoàn tiền, không hoàn cho xong.
                   </Text>
                 </div>
 
@@ -616,7 +657,7 @@
 
               {/* CỘT 2 (GIỮA): KHUNG CHAT "TRÒ CHUYỆN VỚI SHOPEE" */}
               <main className="chat-panel">
-                {/* Header chat với Badge AI & Marker [3] */}
+                {/* Header chat với Badge AI & Huy hiệu [3] nguyên văn từ ai-copy.md */}
                 <div className="chat-header">
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{
@@ -629,18 +670,17 @@
                     </div>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <Text strong style={{ fontSize: 14 }}>Trợ lý Khiếu nại Shopee</Text>
-                        <Tag color="orange" style={{ fontSize: 10, borderRadius: 10, padding: "0 6px" }}>
-                          AI Assistant
-                        </Tag>
+                        <Text strong style={{ fontSize: 13.5 }}>{AI_COPY.header_chat}</Text>
                       </div>
-                      <Text style={{ fontSize: 11, color: "#888" }}>Hỗ trợ Trả hàng / Hoàn tiền tự động</Text>
+                      <Text style={{ fontSize: 11, color: "#888" }}>
+                        Hỗ trợ Trả hàng / Hoàn tiền trung lập
+                      </Text>
                     </div>
                   </div>
 
-                  {/* Marker [3] trông rõ nét */}
+                  {/* Huy hiệu [3] nguyên văn từ ai-copy.md */}
                   <span className="marker-badge">
-                    [3] HAX G1/G2 & Rubric 8: Nhận diện AI + Hạn đếm ngược
+                    [3] {AI_COPY.badge_ai}
                   </span>
                 </div>
 
@@ -649,9 +689,9 @@
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <ClockCircleOutlined />
                     <span>
-                      {AI_COPY.deadline_prefix}
+                      {AI_COPY.ca7_deadline_prefix}
                       <strong>{formatCountdown(countdownSeconds)}</strong>
-                      {AI_COPY.deadline_suffix}
+                      {AI_COPY.ca7_deadline_suffix}
                     </span>
                   </div>
                   <Tag color="warning" style={{ fontSize: 10, margin: 0 }}>Đang chờ shop đối chất</Tag>
@@ -706,94 +746,126 @@
                           {scenario === 8 && AI_COPY.ca8_ai_reply}
                         </div>
 
-                        {/* [1] HAX G11: Thẻ đối chiếu 2 cột Snapshot lúc đặt vs Hiện tại */}
-                        <div className="compare-card">
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span className="marker-badge">
-                              [1] HAX G11: Giải thích vì sao (Đối chiếu mô tả lúc đặt)
-                            </span>
-                            <Tag
-                              color={scenario === 1 ? "error" : (scenario === 7 ? "warning" : "success")}
-                              style={{ fontWeight: 600, fontSize: 11 }}
-                            >
-                              {scenario === 1 && AI_COPY.ca1_status}
-                              {scenario === 7 && AI_COPY.ca7_status}
-                              {scenario === 8 && AI_COPY.ca8_status}
-                            </Tag>
-                          </div>
-
-                          <div className="compare-grid">
-                            <div className="compare-col">
-                              <Text strong style={{ color: "#1677FF", display: "block", marginBottom: 3 }}>
-                                Mô tả lúc đặt (Snapshot quy ước UI)
-                              </Text>
-                              <div>
-                                {scenario === 1 && AI_COPY.ca1_compare_at_order}
-                                {scenario === 7 && "Màu Be sữa chuẩn studio (thời điểm đặt mua)"}
-                                {scenario === 8 && "Màu Xanh rêu đậm, mã phân loại #AK-098"}
-                              </div>
+                        {/* [1] HAX G11: Thẻ đối chiếu 2 cột Snapshot lúc đặt vs Hiện tại (Ca 1 & Ca 8) */}
+                        {scenario === 1 && (
+                          <div className="compare-card">
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span className="marker-badge">
+                                [1] Thẻ đối chiếu (Snapshot lúc đặt — quy ước UI nhóm)
+                              </span>
+                              <Tag color="error" style={{ fontWeight: 600, fontSize: 11 }}>
+                                {AI_COPY.ca1_status}
+                              </Tag>
                             </div>
 
-                            <div className="compare-col">
-                              <Text strong style={{ color: "#FA8C16", display: "block", marginBottom: 3 }}>
-                                Mô tả hiện tại của Shop
-                              </Text>
-                              <div>
-                                {scenario === 1 && AI_COPY.ca1_compare_current}
-                                {scenario === 7 && "Màu Be sữa chuẩn studio (không có sửa đổi)"}
-                                {scenario === 8 && "Màu Xanh rêu đậm, mã phân loại #AK-098 (khớp 100%)"}
+                            <div className="compare-grid">
+                              <div className="compare-col">
+                                <Text strong style={{ color: "#1677FF", display: "block", marginBottom: 3 }}>
+                                  {AI_COPY.ca1_compare_col_left}
+                                </Text>
+                                <div>{AI_COPY.ca1_compare_at_order}</div>
+                              </div>
+
+                              <div className="compare-col">
+                                <Text strong style={{ color: "#FA8C16", display: "block", marginBottom: 3 }}>
+                                  {AI_COPY.ca1_compare_col_right}
+                                </Text>
+                                <div>{AI_COPY.ca1_compare_current}</div>
                               </div>
                             </div>
                           </div>
+                        )}
 
-                          {/* Dẫn giải bằng chứng cụ thể cho từng ca */}
-                          <div style={{ fontSize: 11.5, color: "#666", lineHeight: 1.4 }}>
-                            {scenario === 1 && (
-                              <span style={{ color: "#CF1322" }}>
-                                ⚠️ <strong>Phát hiện mâu thuẫn:</strong> Người bán đã tự ý sửa mô tả sản phẩm sau khi đơn phát sinh. AI tuyệt đối <em>KHÔNG gọi tu_choi_khieu_nai</em> để bảo vệ người mua.
+                        {/* Ca 7: Khung 3 bước tiến trình nguyên văn từ ai-copy.md */}
+                        {scenario === 7 && (
+                          <div className="progress-box">
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                              <span className="marker-badge">
+                                [3] Tiến trình đối soát khách quan
                               </span>
-                            )}
-                            {scenario === 7 && (
-                              <span style={{ color: "#D46B08" }}>
-                                🛡️ <strong>Nguyên tắc trung lập:</strong> Lời đe dọa bóc phốt TikTok 500k view không phải căn cứ giải ngân. AI kích hoạt thời hạn đối chất cho người bán.
-                              </span>
-                            )}
-                            {scenario === 8 && (
-                              <span style={{ color: "#389E0D" }}>
-                                ✅ <strong>Căn cứ đối soát:</strong> {AI_COPY.ca8_seller_evidence}. AI dám khẳng định <em>"{AI_COPY.not_enough_grounds}"</em>, không hoàn tiền bừa bãi.
-                              </span>
-                            )}
+                              <Tag color="warning" style={{ fontSize: 10 }}>
+                                {AI_COPY.ca7_status}
+                              </Tag>
+                            </div>
+                            <div className="progress-step-item" style={{ color: "#389E0D", fontWeight: 600 }}>
+                              <CheckCircleOutlined /> 1. {AI_COPY.ca7_progress_1}
+                            </div>
+                            <div className="progress-step-item" style={{ color: "#D46B08", fontWeight: 600 }}>
+                              <ClockCircleOutlined /> 2. {AI_COPY.ca7_progress_2} (Hạn còn lại: {formatCountdown(countdownSeconds)})
+                            </div>
+                            <div className="progress-step-item" style={{ color: "#888" }}>
+                              <ArrowRightOutlined /> 3. {AI_COPY.ca7_progress_3}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#666", marginTop: 6, borderTop: "1px dashed #EEE", paddingTop: 4 }}>
+                              • Tool gọi: <code>yeu_cau_bang_chung</code> (Tự làm cho cả buyer + seller) · Không gọi <code>soan_hoan_tien</code> · Không <code>phat_shop</code>.
+                            </div>
                           </div>
-                        </div>
+                        )}
 
-                        {/* Trạng thái hành động tương ứng */}
-                        <div style={{ marginTop: 10, fontSize: 11.5, color: "#555" }}>
-                          {scenario === 1 && (
-                            <Alert
-                              type="info"
-                              showIcon
-                              message="Hành động tự động của Trợ lý AI"
-                              description="1. Đã tự động gọi yeu_cau_bang_chung gửi mẫu đối chất cho Shop và Khách (tin đã tới). 2. Đã lập hồ sơ de_xuat_hoan_tien (đề xuất tách bước của nhóm) chuyển sang trạng thái 'Chờ nhân viên sàn duyệt' tại Màn 2. AI KHÔNG tự ý xuất tiền."
-                              style={{ fontSize: 11.5, padding: "8px 12px" }}
-                            />
-                          )}
+                        {/* Ca 8: Thẻ đối chiếu tem khớp */}
+                        {scenario === 8 && (
+                          <div className="compare-card">
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span className="marker-badge">
+                                [1] Thẻ đối chiếu chứng cứ shop
+                              </span>
+                              <Tag color="success" style={{ fontWeight: 600, fontSize: 11 }}>
+                                {AI_COPY.ca8_status}
+                              </Tag>
+                            </div>
+
+                            <div className="compare-grid">
+                              <div className="compare-col">
+                                <Text strong style={{ color: "#1677FF", display: "block", marginBottom: 3 }}>
+                                  Mô tả lúc đặt
+                                </Text>
+                                <div>Áo phao nam màu rêu đậm · Mã #AK-098</div>
+                              </div>
+
+                              <div className="compare-col">
+                                <Text strong style={{ color: "#389E0D", display: "block", marginBottom: 3 }}>
+                                  Bằng chứng Shop gửi
+                                </Text>
+                                <div>Video đóng hàng / tem mã khớp mô tả lúc đặt (100%)</div>
+                              </div>
+                            </div>
+
+                            <div style={{ fontSize: 11.5, color: "#389E0D", lineHeight: 1.4 }}>
+                              ✅ <strong>Kết luận:</strong> Hiện chưa đủ căn cứ xác định sản phẩm sai mô tả. Shopee không hoàn tiền chỉ vì cảm nhận lệch nhẹ so với ảnh.
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Nút phụ (chips) nguyên văn từ ai-copy.md */}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                          <Button
+                            size="small"
+                            icon={<FileTextOutlined />}
+                            onClick={() => setInfoModalVisible(true)}
+                          >
+                            {AI_COPY.chip_xem_ho_so}
+                          </Button>
+                          <Button
+                            size="small"
+                            icon={<SafetyCertificateOutlined />}
+                            onClick={() => Modal.info({
+                              title: AI_COPY.chip_gui_them_chung,
+                              content: "Biểu mẫu yêu cầu bằng chứng (yeu_cau_bang_chung) đã được mở. Bạn có thể tải lên ảnh chụp tem mác thực tế hoặc video mở hộp."
+                            })}
+                          >
+                            {AI_COPY.chip_gui_them_chung}
+                          </Button>
                           {scenario === 7 && (
-                            <Alert
-                              type="warning"
-                              showIcon
-                              message="Quy trình bảo vệ quyền đối chất"
-                              description="AI không tạo đề xuất hoàn tiền (soan_hoan_tien không pending). Đồng hồ đếm ngược được kích hoạt để Shop có quyền gửi video đóng hàng phản hồi."
-                              style={{ fontSize: 11.5, padding: "8px 12px" }}
-                            />
-                          )}
-                          {scenario === 8 && (
-                            <Alert
-                              type="success"
-                              showIcon
-                              message="Bảo vệ Người bán đúng"
-                              description="Shop giao hoàn toàn đúng mô tả lúc đặt. AI hướng dẫn khách cung cấp thêm video đồng kiểm hoặc bấm 'Gặp nhân viên hỗ trợ' nếu chưa đồng ý."
-                              style={{ fontSize: 11.5, padding: "8px 12px" }}
-                            />
+                            <Button
+                              size="small"
+                              icon={<ClockCircleOutlined />}
+                              onClick={() => Modal.info({
+                                title: AI_COPY.chip_xem_tien_trinh,
+                                content: "Tiến trình hiện tại: 1. Đã nhận khiếu nại -> 2. Đang chờ shop phản hồi (hạn còn 22h15) -> 3. Chuyên viên đối soát theo chứng cứ."
+                              })}
+                            >
+                              {AI_COPY.chip_xem_tien_trinh}
+                            </Button>
                           )}
                         </div>
 
@@ -806,7 +878,7 @@
                     </div>
                   )}
 
-                  {/* Thông báo nếu đã bấm Escalated [2] */}
+                  {/* Thông báo nếu đã bấm hoặc mặc định chuyển chuyên viên */}
                   {escalated && (
                     <div style={{
                       background: "#E6F4FF", border: "1px solid #91CAFF",
@@ -816,7 +888,7 @@
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <CheckCircleOutlined style={{ color: "#1677FF", fontSize: 16 }} />
                         <span>
-                          <strong>{AI_COPY.escalate_done}</strong> — Hồ sơ đã chuyển vào hàng đợi ưu tiên của Trưởng nhóm CSKH.
+                          <strong>{AI_COPY.ca1_status}</strong> — Hồ sơ đã chuyển vào hàng đợi ưu tiên của Chuyên viên khiếu nại (chuyen_truong_nhom).
                         </span>
                       </div>
                       <Button
@@ -830,29 +902,29 @@
                   )}
                 </div>
 
-                {/* Footer Chat: Nút [2] HAX G10 & Mock Chat Bar */}
+                {/* Footer Chat: Nút [2] HAX G10 nguyên văn "Gặp nhân viên hỗ trợ" */}
                 <div className="chat-footer">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <span className="marker-badge">
-                      [2] HAX G10: Thu hẹp phạm vi khi không chắc (Chuyển chuyên viên)
+                      [2] HAX G10: Thu hẹp phạm vi khi không chắc
                     </span>
                     <Text style={{ fontSize: 11, color: "#888" }}>
-                      Hành động tự làm · Có thể hoàn tác (Undo)
+                      Tool: chuyen_truong_nhom (Tự làm · Hoàn tác được)
                     </Text>
                   </div>
 
-                  <div style={{ display: "flex", gap: 10 }}>
-                    {!escalated ? (
-                      <Button
-                        type="default"
-                        danger
-                        icon={<CustomerServiceOutlined />}
-                        onClick={() => setEscalated(true)}
-                        style={{ fontWeight: 600 }}
-                      >
-                        {AI_COPY.meet_staff_btn} (chuyen_truong_nhom)
-                      </Button>
-                    ) : (
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <Button
+                      type={escalated ? "primary" : "default"}
+                      danger={!escalated}
+                      icon={<CustomerServiceOutlined />}
+                      onClick={() => setEscalated(true)}
+                      disabled={escalated}
+                      style={{ fontWeight: 600 }}
+                    >
+                      {AI_COPY.meet_staff_btn}
+                    </Button>
+                    {escalated && (
                       <Button
                         type="dashed"
                         icon={<UndoOutlined />}
@@ -898,7 +970,7 @@
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888" }}>
                     • Cái giá sai: <em>Tin đã tới — không thu hồi nội dung</em><br />
-                    • Hiện tại: <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>Đã tự động gửi form cho 2 bên</Tag>
+                    • Hiện tại: <Tag color="blue" style={{ fontSize: 10, margin: 0 }}>{AI_COPY.evidence_request_sent}</Tag>
                   </div>
                 </div>
 
@@ -912,9 +984,9 @@
                     Chuyển hồ sơ cho trưởng nhóm xử lý (HAX G10).
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888" }}>
-                    • Cái giá sai: <em>Đảo lại được (Undo)</em><br />
+                    • Cái giá sai: <em>Đảo lại được (Undo / Graceful Fallback)</em><br />
                     • Hiện tại: {escalated ? (
-                      <Tag color="warning" style={{ fontSize: 10, margin: 0 }}>Đã chuyển Trưởng nhóm</Tag>
+                      <Tag color="warning" style={{ fontSize: 10, margin: 0 }}>{AI_COPY.ca1_status}</Tag>
                     ) : (
                       <Tag style={{ fontSize: 10, margin: 0 }}>Sẵn sàng chuyển</Tag>
                     )}
@@ -932,18 +1004,19 @@
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888", marginBottom: 6 }}>
                     • Cái giá sai: <strong style={{ color: "#CF1322" }}>Khó: tiền đã về người mua</strong><br />
-                    • Tách bước của nhóm: <Text code style={{ fontSize: 9.5 }}>de_xuat_hoan_tien</Text> (AI lập) → <Text code style={{ fontSize: 9.5 }}>thuc_thi_hoan_tien</Text> (Người duyệt)
+                    • Quy tắc copy Nghi: <em>AI KHÔNG tự lập nháp soan_hoan_tien</em> ở cả 3 ca. Chỉ chuyên viên duyệt tại Màn 2.
                   </div>
 
                   <div style={{ background: "#FFFFFF", padding: "6px 8px", borderRadius: 4, border: "1px dashed #FFA39E" }}>
                     <div style={{ fontSize: 11, marginBottom: 2 }}>Trạng thái dòng tiền:</div>
-                    {refundState === "none" && <Tag style={{ fontSize: 10 }}>Chưa có đề xuất</Tag>}
-                    {refundState === "pending" && <Tag color="warning" style={{ fontSize: 10 }}>Chờ nhân viên sàn duyệt</Tag>}
-                    {refundState === "approved" && <Tag color="error" style={{ fontSize: 10 }}>Đã duyệt hoàn tiền (Tiền đã chuyển)</Tag>}
-                    {refundState === "rejected" && <Tag color="default" style={{ fontSize: 10 }}>Đã từ chối đề xuất</Tag>}
+                    {refundState === "none" && <Tag style={{ fontSize: 10 }}>{AI_COPY.staff_proposal_none}</Tag>}
+                    {refundState === "pending" && <Tag color="warning" style={{ fontSize: 10 }}>{AI_COPY.staff_proposal_pending}</Tag>}
+                    {refundState === "approved" && <Tag color="error" style={{ fontSize: 10 }}>Đã duyệt hoàn tiền (Tiền đã về người mua)</Tag>}
+                    {refundState === "rejected" && <Tag color="default" style={{ fontSize: 10 }}>Đã từ chối đề xuất hoàn tiền</Tag>}
+                    {refundState === "requested_more" && <Tag color="processing" style={{ fontSize: 10 }}>Đã yêu cầu bổ sung bằng chứng</Tag>}
                   </div>
                   <div style={{ fontSize: 10, color: "#CF1322", marginTop: 4 }}>
-                    * Tuyệt đối KHÔNG có nút bấm cho AI hay khách tự ý xuất tiền.
+                    * Không cho phép hoàn tiền tức thì từ khung chat (AI hoặc khách).
                   </div>
                 </div>
 
@@ -973,15 +1046,15 @@
                   </div>
                   <div style={{ fontSize: 10.5, color: "#CF1322" }}>
                     • Thuộc thẩm quyền bộ phận điều tra chuyên trách.<br />
-                    • <strong>Bị khóa cứng ở cấp hệ thống: KHÔNG có nút bấm.</strong>
+                    • <strong>Bị khóa cứng ở cấp hệ thống: KHÔNG có nút bấm "Phạt / khoá shop".</strong>
                   </div>
                 </div>
               </aside>
             </div>
           ) : (
-            /* ==================== MÀN 2: NGƯỜI BÁN & BÀN DUYỆT SÀN ==================== */
+            /* ==================== MÀN 2: NGƯỜI BÁN & NHÂN VIÊN DUYỆT [4] ==================== */
             <div className="screen-2-container">
-              {/* PHẦN 1: GÓC NHÌN NGƯỜI BÁN (SHOPEE SELLER CENTRE) */}
+              {/* PHẦN 1: GÓC NHÌN NGƯỜI BÁN */}
               <div className="screen-2-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -994,27 +1067,23 @@
                 <Alert
                   type="warning"
                   showIcon
-                  message="Có 1 khiếu nại Trả hàng/Hoàn tiền đang mở"
+                  message="Thông báo tới người bán"
                   description={
-                    <div>
-                      Đơn hàng <strong>{currentOrder.id}</strong> ({currentOrder.name}) bị người mua khiếu nại "Hàng không đúng mô tả".
-                      <div style={{ marginTop: 6 }}>
-                        <ClockCircleOutlined style={{ marginRight: 4 }} />
-                        Thời hạn gửi bằng chứng đối chất còn lại: <strong>{formatCountdown(countdownSeconds)}</strong> (dữ liệu dựng).
-                      </div>
+                    <div style={{ whiteSpace: "pre-line", fontSize: 12.5, lineHeight: 1.6, marginTop: 4 }}>
+                      {AI_COPY.seller_notice}
                     </div>
                   }
                 />
 
                 <div style={{ background: "#FAFAFA", border: "1px solid #ECECEC", borderRadius: 6, padding: 12 }}>
                   <Text strong style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
-                    HỒ SƠ KHIẾU NẠI TỪ NGƯỜI MUA:
+                    HỒ SƠ KHIẾU NẠI HIỆN TẠI:
                   </Text>
                   <div style={{ fontSize: 12, color: "#555", lineHeight: 1.6 }}>
-                    <div>• <strong>Người mua:</strong> Nguyễn Văn A (Mã KH: #KH-4821)</div>
-                    <div>• <strong>Lý do:</strong> "Hàng nhận không đúng mô tả"</div>
-                    <div>• <strong>Nội dung báo:</strong> <em>"{scenario === 1 ? AI_COPY.ca1_user_msg : (scenario === 7 ? AI_COPY.ca7_user_msg : AI_COPY.ca8_user_msg)}"</em></div>
-                    <div>• <strong>Số tiền yêu cầu hoàn:</strong> <strong style={{ color: "var(--shopee-orange)" }}>{currentOrder.price}</strong></div>
+                    <div>• <strong>Mã đơn:</strong> {AI_COPY.seller_order_id} ({currentOrder.name})</div>
+                    <div>• <strong>Người mua khiếu nại:</strong> <em>"{scenario === 1 ? AI_COPY.ca1_user_msg : (scenario === 7 ? AI_COPY.ca7_user_msg : AI_COPY.ca8_user_msg)}"</em></div>
+                    <div>• <strong>Số tiền yêu cầu:</strong> <strong style={{ color: "var(--shopee-orange)" }}>{currentOrder.price}</strong></div>
+                    <div>• <strong>Hạn phản hồi đếm ngược:</strong> <strong>{formatCountdown(countdownSeconds)}</strong> (dữ liệu dựng)</div>
                   </div>
                 </div>
 
@@ -1030,158 +1099,170 @@
                         <CheckCircleOutlined /> Đã nộp bằng chứng đối chất thành công
                       </div>
                       <div style={{ fontSize: 11.5, color: "#555", marginTop: 4 }}>
-                        • File đính kèm: <code>video_dong_hang_tem_vach.mp4</code> (Đã xác thực thời gian quét mã).<br />
-                        • Ghi chú của shop: <em>"Shop có video đóng gói nguyên vẹn tem niêm phong và mã vạch trùng khớp mô tả."</em>
+                        • File đính kèm: <code>video_dong_hang_tem_vach.mp4</code><br />
+                        • Nội dung đối soát: {scenario === 8 ? "Video đóng hàng / tem mã khớp mô tả lúc đặt (100%)" : "Ảnh chụp tem sản phẩm và video đóng gói tại kho."}
                       </div>
                     </div>
                   ) : (
                     <div>
                       <Paragraph style={{ fontSize: 11.5, color: "#666", marginBottom: 8 }}>
-                        Nếu bạn giao đúng mô tả lúc đặt, vui lòng cung cấp video đóng hàng hoặc ảnh chụp tem mã vạch trước khi hết thời hạn để bảo vệ quyền lợi.
+                        Vui lòng gửi bằng chứng đối chất (ảnh/video đóng hàng, tem, mô tả lúc đặt nếu có) trước khi hết hạn.
                       </Paragraph>
                       <Button
                         type="primary"
                         icon={<FileTextOutlined />}
                         onClick={() => setSellerEvidenceSubmitted(true)}
                       >
-                        Gửi bằng chứng đối chất (Video & Tem đóng hàng)
+                        {AI_COPY.seller_send_evidence_btn}
                       </Button>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* PHẦN 2: BÀN DUYỆT CỦA NHÂN VIÊN SÀN (DISPUTE AGENT) */}
+              {/* PHẦN 2: KHUNG NHÂN VIÊN SÀN (DUYỆT soan_hoan_tien) [4] */}
               <div className="screen-2-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <AuditOutlined style={{ fontSize: 20, color: "#1677FF" }} />
-                    <Title level={5} style={{ margin: 0 }}>Bàn Thẩm Định Khiếu Nại — Chuyên Viên Sàn</Title>
+                    <Title level={5} style={{ margin: 0 }}>Khung nhân viên sàn (duyệt soan_hoan_tien)</Title>
                   </div>
                   <span className="marker-badge">
-                    [4] Màn Người bán & Sàn duyệt
+                    [4] Màn Người bán / Nhân viên duyệt [4] (Bonus)
                   </span>
                 </div>
 
                 <div style={{ background: "#FAFAFA", border: "1px solid #ECECEC", borderRadius: 6, padding: 12 }}>
-                  <Text strong style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-                    TỔNG HỢP HỒ SƠ TỪ TRỢ LÝ AI:
-                  </Text>
-                  <div style={{ fontSize: 12, color: "#444", lineHeight: 1.6 }}>
-                    <div>• <strong>Đơn hàng:</strong> {currentOrder.id} — {currentOrder.name}</div>
-                    <div>• <strong>Đối chiếu dữ liệu Snapshot lúc đặt:</strong>
-                      <span style={{ color: scenario === 1 ? "#CF1322" : "#389E0D", marginLeft: 4 }}>
-                        {scenario === 1 ? "Mâu thuẫn (Shop đã sửa mô tả sau bán)" : (scenario === 8 ? "Khớp 100% với tem hàng" : "Đang chờ hết hạn đối chất")}
-                      </span>
+                  <div style={{ fontSize: 12.5, color: "#333", lineHeight: 1.7 }}>
+                    <div>
+                      <strong>{AI_COPY.staff_proposal_label}</strong>
+                      {refundState === "none" && (
+                        <Tag color="default" style={{ fontWeight: 600 }}>{AI_COPY.staff_proposal_none}</Tag>
+                      )}
+                      {refundState === "pending" && (
+                        <Tag color="warning" style={{ fontWeight: 600 }}>{AI_COPY.staff_proposal_pending}</Tag>
+                      )}
+                      {refundState === "approved" && (
+                        <Tag color="error" style={{ fontWeight: 600 }}>Đã duyệt hoàn tiền</Tag>
+                      )}
+                      {refundState === "rejected" && (
+                        <Tag color="default" style={{ fontWeight: 600 }}>Đã từ chối</Tag>
+                      )}
+                      {refundState === "requested_more" && (
+                        <Tag color="processing" style={{ fontWeight: 600 }}>Yêu cầu bổ sung</Tag>
+                      )}
                     </div>
-                    <div>• <strong>Đánh giá của AI:</strong>
-                      {scenario === 1 && " AI đề xuất hoàn tiền do lỗi nguồn sự thật của Shop, đã lập phiếu de_xuat_hoan_tien."}
-                      {scenario === 7 && " AI không lập đề xuất hoàn tiền vì lời đe dọa không phải căn cứ."}
-                      {scenario === 8 && " AI xác định shop giao đúng mô tả lúc đặt, chưa đủ căn cứ hoàn tiền."}
+                    <div style={{ marginTop: 4, color: "#666" }}>
+                      <strong>{AI_COPY.staff_evidence_note}</strong>
                     </div>
                   </div>
                 </div>
 
-                {/* Khung phê duyệt dòng tiền soan_hoan_tien */}
+                {/* 3 Nút nguyên văn từ ai-copy.md */}
                 <div style={{ border: "1px solid #E8E8E8", borderRadius: 8, padding: 14, background: "#FFF" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <Text strong style={{ fontSize: 13 }}>
-                      Phê duyệt dòng tiền hoàn (<Text code>soan_hoan_tien</Text>)
-                    </Text>
-                    <Tag color="volcano">Cần người duyệt</Tag>
-                  </div>
+                  <Text strong style={{ fontSize: 12.5, display: "block", marginBottom: 10 }}>
+                    Thao tác thẩm định của Chuyên viên sàn:
+                  </Text>
 
-                  {refundState === "pending" && (
-                    <div>
-                      <Alert
-                        type="warning"
-                        showIcon
-                        message="Có đề xuất hoàn tiền đang chờ phê duyệt"
-                        description={
-                          <div>
-                            Số tiền đề xuất: <strong style={{ color: "var(--shopee-orange)" }}>{currentOrder.price}</strong>.<br />
-                            Căn cứ: Phát hiện Shop sửa đổi thông số sau bán hàng (Nồi 6L thành 5L).
-                          </div>
-                        }
-                        style={{ marginBottom: 12 }}
-                      />
+                  <Space wrap size="middle">
+                    <Button
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      style={{ background: "#389E0D", borderColor: "#389E0D" }}
+                      onClick={() => setRefundState("approved")}
+                    >
+                      {AI_COPY.staff_approve}
+                    </Button>
 
-                      <Space>
-                        <Button
-                          type="primary"
-                          icon={<CheckOutlined />}
-                          style={{ background: "#389E0D", borderColor: "#389E0D" }}
-                          onClick={() => setRefundState("approved")}
-                        >
-                          Duyệt hoàn tiền cho Người mua
-                        </Button>
+                    <Button
+                      icon={<InfoCircleOutlined />}
+                      onClick={() => setRefundState("requested_more")}
+                    >
+                      {AI_COPY.staff_request_more}
+                    </Button>
 
-                        <Button
-                          danger
-                          icon={<CloseCircleOutlined />}
-                          onClick={() => setRefundState("rejected")}
-                        >
-                          Từ chối đề xuất hoàn tiền
-                        </Button>
-                      </Space>
-                    </div>
-                  )}
+                    <Button
+                      danger
+                      icon={<CloseCircleOutlined />}
+                      onClick={() => setRefundState("rejected")}
+                    >
+                      {AI_COPY.staff_reject}
+                    </Button>
+                  </Space>
 
-                  {refundState === "approved" && (
-                    <div>
+                  {/* Thông báo kết quả thao tác */}
+                  <div style={{ marginTop: 12 }}>
+                    {refundState === "approved" && (
                       <Alert
                         type="error"
                         showIcon
-                        message="ĐÃ DUYỆT HOÀN TIỀN THÀNH CÔNG"
-                        description={
-                          <div>
-                            <strong>Cảnh báo chi phí sai lầm:</strong> <em>"Khó: tiền đã về người mua — không thể thu hồi."</em><br />
-                            Số tiền <strong>{currentOrder.price}</strong> đã được hoàn về Ví ShopeePay của khách. Đơn khiếu nại chính thức đóng.
-                          </div>
-                        }
-                        style={{ marginBottom: 10 }}
+                        message="ĐÃ PHÊ DUYỆT HOÀN TIỀN"
+                        description="Khó: tiền đã về người mua — không thể thu hồi. Sàn đã giải ngân theo hồ sơ đối soát."
                       />
-                      <Button size="small" onClick={() => setRefundState("pending")}>
-                        Đặt lại trạng thái chờ duyệt (Thử nghiệm lại)
-                      </Button>
-                    </div>
-                  )}
-
-                  {refundState === "rejected" && (
-                    <div>
+                    )}
+                    {refundState === "rejected" && (
                       <Alert
                         type="info"
                         showIcon
-                        message="ĐÃ TỪ CHỐI ĐỀ XUẤT HOÀN TIỀN"
-                        description="Hồ sơ được giữ nguyên ở trạng thái bảo lãnh tạm giữ của sàn. Yêu cầu chuyên viên tiếp tục yêu cầu bổ sung bằng chứng."
-                        style={{ marginBottom: 10 }}
+                        message="ĐÃ TỪ CHỐI ĐỀ XUẤT"
+                        description="Đề xuất bị từ chối; tiền tiếp tục tạm giữ tại sàn."
                       />
-                      <Button size="small" onClick={() => setRefundState("pending")}>
-                        Đặt lại trạng thái chờ duyệt (Thử nghiệm lại)
-                      </Button>
-                    </div>
-                  )}
-
-                  {refundState === "none" && (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span style={{ fontSize: 12, color: "#888" }}>
-                          Chưa có đề xuất hoàn tiền nào được tạo.<br />
-                          {scenario === 7 && "Trợ lý AI tuân thủ nguyên tắc trung lập: Lời đe dọa bóc phốt không làm AI tự động xuất tiền."}
-                          {scenario === 8 && "Trợ lý AI bảo vệ người bán đúng: Chưa đủ căn cứ nên không tạo đề xuất hoàn tiền."}
-                        </span>
-                      }
-                    />
-                  )}
+                    )}
+                    {refundState === "requested_more" && (
+                      <Alert
+                        type="warning"
+                        showIcon
+                        message="ĐÃ YÊU CẦU BỔ SUNG CHỨNG CỨ"
+                        description="Đã gửi thông báo yêu cầu cả hai bên bổ sung ảnh/video đối chất trong thời hạn."
+                      />
+                    )}
+                    {refundState === "none" && (
+                      <div style={{ fontSize: 11.5, color: "#888", fontStyle: "italic" }}>
+                        * Ở trạng thái bình thường: Trợ lý AI chưa lập đề xuất hoàn. Bấm 1 trong 3 nút trên để mô phỏng quyết định của Chuyên viên sàn.
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ marginTop: "auto", fontSize: 11, color: "#888", borderTop: "1px dashed #EEE", paddingTop: 10 }}>
-                  💡 <em>Nguyên tắc thiết kế PAIR/HAX:</em> Trạng thái duyệt tại Màn 2 được đồng bộ hai chiều trực tiếp sang Panel 5 Tool ở Màn 1 để người dùng và trợ lý AI luôn theo dõi cùng một nguồn sự thật duy nhất.
-                </div>
+                <Alert
+                  type="info"
+                  showIcon
+                  message="Nguyên tắc duyệt hoàn tiền"
+                  description="AI KHÔNG tự bấm phê duyệt. Quá hạn không ai duyệt → giữ tiền tạm giữ / không auto-hoàn (theo thiết kế nhóm ở §4)."
+                  style={{ fontSize: 11.5 }}
+                />
               </div>
             </div>
           )}
+
+          {/* Modal Xem chi tiết hồ sơ (Nút phụ) */}
+          <Modal
+            title={AI_COPY.chip_xem_ho_so}
+            open={infoModalVisible}
+            onOk={() => setInfoModalVisible(false)}
+            onCancel={() => setInfoModalVisible(false)}
+            footer={[
+              <Button key="close" onClick={() => setInfoModalVisible(false)}>
+                Đóng
+              </Button>
+            ]}
+          >
+            <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+              <Paragraph>
+                <strong>Mã đơn:</strong> {AI_COPY.seller_order_id} ({currentOrder.name})<br />
+                <strong>Shop:</strong> {currentOrder.shop}<br />
+                <strong>Giá trị:</strong> {currentOrder.price}<br />
+                <strong>Trạng thái khiếu nại:</strong> {scenario === 1 ? AI_COPY.ca1_status : (scenario === 7 ? AI_COPY.ca7_status : AI_COPY.ca8_status)}
+              </Paragraph>
+              <Divider style={{ margin: "10px 0" }} />
+              <Paragraph>
+                <strong>Đối chiếu mô tả lúc đặt (Snapshot quy ước UI):</strong><br />
+                {scenario === 1 && `${AI_COPY.ca1_compare_col_left}: ${AI_COPY.ca1_compare_at_order} vs ${AI_COPY.ca1_compare_col_right}: ${AI_COPY.ca1_compare_current}`}
+                {scenario === 7 && "Màu Be sữa lúc đặt vs Hiện tại: Không có chỉnh sửa mô tả. Chờ shop đối chất."}
+                {scenario === 8 && "Áo màu xanh rêu lúc đặt vs Tem video shop: Khớp 100%. Chưa đủ căn cứ hoàn tiền."}
+              </Paragraph>
+            </div>
+          </Modal>
         </ConfigProvider>
       );
     }

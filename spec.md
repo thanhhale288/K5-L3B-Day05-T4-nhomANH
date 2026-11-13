@@ -8,13 +8,11 @@
 
 Lớp: L3B · Track: T4 · Nhóm: nhomANH · Hạn nộp: 23:59 ngày 13/11/2026 (Asia/Saigon)
 
-> **Lưu ý:** Cả nhóm chốt §1 trong buổi thảo luận chung (`plan.md`); sau đó mỗi người làm task riêng theo file của mình.
-
-| Họ và Tên     | Mã Học Viên | Việc đã làm                                    |
-| ------------- | ----------- | ---------------------------------------------- |
-| Lê Thanh Hà   | 2A202603901 | S2, S5.1 & prototype (main) — xem `Ha-plan.md` |
-| Lã Quốc Nghị  | 2A202603947 | §3, §5.2, §6, `prototype/ai-copy.md` — xem `Nghi-plan.md` |
-| Phạm Thanh An | 2A202603913 | S4, S5.3–5.4, S7 — xem `An-plan.md`            |
+| Họ và Tên     | Mã Học Viên |
+| ------------- | ----------- |
+| Lê Thanh Hà   | 2A202603901 |
+| Lã Quốc Nghị  | 2A202603947 |
+| Phạm Thanh An | 2A202603913 |
 
 ## §1. Lát cắt & phạm vi
 
@@ -64,9 +62,9 @@ Lớp: L3B · Track: T4 · Nhóm: nhomANH · Hạn nộp: 23:59 ngày 13/11/2026
   * **Kịch bản 6 (Khách khiếu nại hàng giả, đòi khoá shop và phạt thật nặng qua tool** `phat_shop`**):**
   * *Lý do không chọn vào top 2:* Rủi ro gọi nhầm `phat_shop` tuy có hậu quả rất lớn cho shop nhưng có thể ngăn chặn triệt để và đơn giản bằng cách cấm hẳn tool này ở cấp phân quyền hệ thống (chuyển thẩm quyền sang bộ phận điều tra chuyên trách). Trong khi đó, Kịch bản 1 và Kịch bản 7 đòi hỏi AI phải trực tiếp xử lý mâu thuẫn phức tạp giữa hai nguồn dữ liệu đối lập và cân bằng quyền lợi giữa hai con người thật (người mua và người bán) ngay trong luồng hội thoại, trùng khớp với trọng tâm của đề bài và yêu cầu demo bắt buộc.
 
-## §3. Khi AI sai  (chặng 3) · *Nghi*
+## §3. Khi AI sai  (chặng 3)
 
-Hai kịch bản đắt nhất (chốt ở `plan.md` / §2): **Ca 1 = kịch bản #1** (shop sửa mô tả) · **Ca 2 = kịch bản #7** (doạ bóc phốt).
+Hai kịch bản đắt nhất (đã chốt ở §2): **Ca 1 = kịch bản #1** (shop sửa mô tả) · **Ca 2 = kịch bản #7** (doạ bóc phốt).
 
 ### 3.1 Ca đắt #1 — Người bán sửa mô tả sau khi bán (Lớp ①)
 
@@ -142,7 +140,7 @@ Hai kịch bản đắt nhất (chốt ở `plan.md` / §2): **Ca 1 = kịch b�
 
 ## §4. Mức tự chủ  (chặng 4)
 
-Nguồn sự thật: đúng 5 tool ghi trong track T4 (`plan.md` §3.2). Track không có tool chỉ-đọc; đối chiếu mô tả lúc đặt là suy luận của AI. `de_xuat_hoan_tien` và `thuc_thi_hoan_tien` ở mục 4.2 là tách bước do nhóm đề xuất, không phải tool trong đề. Tool gốc duy nhất liên quan tiền về người mua là `soan_hoan_tien`.
+Nguồn sự thật: đúng 5 tool ghi trong track T4. Track không có tool chỉ-đọc; đối chiếu mô tả lúc đặt là suy luận của AI. `de_xuat_hoan_tien` và `thuc_thi_hoan_tien` ở mục 4.2 là tách bước do nhóm đề xuất, không phải tool trong đề. Tool gốc duy nhất liên quan tiền về người mua là `soan_hoan_tien`.
 
 ### 4.1. Mức từng tool
 
@@ -215,19 +213,19 @@ Tách bước (luật thêm, không phải tool trong đề):
 - Nếu để Tự làm: "Bot tự giải quyết và hoàn tiền ngay."
 - Mức đã chốt: "Trợ lý giúp thu thập chứng cứ và lập hồ sơ gửi người bán; chuyên viên sàn đối soát. Hệ thống nói rõ thời hạn yêu cầu trả hàng và còn bao lâu."
 
-Không cam kết số phút hay số ngày chính thức. Đề không cấp số ngày dựng; 15 ngày trên trang trợ giúp Shopee thật là chính sách khác bài (`plan.md` §3.1).
+Không cam kết số phút hay số ngày chính thức. Đề không cấp số ngày dựng; 15 ngày trên trang trợ giúp Shopee thật là chính sách khác bài.
 
 ## §5. Prototype  (chặng 5)
 
-### §5.1. File, công cụ, phần mock *(Hà)*
+### §5.1. File, công cụ, phần mock
 - File: `prototype/index.html` — mở bằng double-click (hoặc kéo vào Chrome/Safari), không cần bước build hay `node_modules`.
 - Công cụ: HTML + React 18.3.1 UMD + Ant Design 5.22.7 (kèm `reset.css`) + dayjs 1.11.13 + @ant-design/icons 5.5.2 + @babel/standalone 7.26.10, tải qua CDN jsDelivr (đã pin phiên bản; URL đã kiểm tra HTTP 200). JSX viết inline, biên dịch trên trình duyệt. Giao diện desktop (3 cột), token cam Shopee `#EE4D2D`. Dựng bằng `agy` (Gemini 3.8 Flash High).
 - Phần mock: toàn bộ dữ liệu đơn hàng (tên người, shop, mã đơn, giá), tin nhắn, thẻ đối chiếu mô tả lúc đặt / mô tả hiện tại, đồng hồ hạn phản hồi người bán, nhãn hạn gửi yêu cầu trả hàng (cửa sổ 15 ngày dựng từ ngày đơn 08/11/2026 đến 23/11/2026; copy `return_window_label` / `return_window_disclaimer` nói rõ không phải chính sách Shopee thật), bằng chứng shop, trạng thái 5 tool. Chi tiết nồi 6L vs 5L và số giờ đếm ngược là dữ liệu dựng của nhóm. "Snapshot lúc đặt" là quy ước hiển thị UI, không phải trường có trong đề bài.
 - Lời gọi AI thật: **không**. Không fetch API, không hardcode API key.
 
-### §5.2 Ảnh đánh số · *Nghi*
+### §5.2 Ảnh đánh số
 
-> Ảnh chụp sau điểm họp lại khi Hà xong HTML: `prototype/screenshot1.png` (Màn 1 — người mua), `prototype/screenshot2.png` (Màn 2 — seller / duyệt, nếu có). Lời thoại chuẩn nằm trong `prototype/ai-copy.md`.
+> `prototype/screenshot1.png`: Màn 1 (khung chat người mua), đang mở popover **[1]** (HAX G11) trên thẻ đối chiếu “mô tả lúc đặt” vs “mô tả hiện tại”. `prototype/screenshot2.png`: Màn 2 (người bán / khung nhân viên duyệt). Lời thoại chuẩn nằm trong object `AI_COPY` trong `prototype/index.html`.
 
 | Số | Thể hiện gì | HAX / PAIR | Mức tự chủ |
 |---|---|---|---|
@@ -238,7 +236,7 @@ Không cam kết số phút hay số ngày chính thức. Đề không cấp s�
 
 ### §5.3. Mức tự chủ trông thế nào trên màn hình
 
-Sơ đồ đã chốt (`plan.md` §4.4): Màn 1 là chat người mua; Màn 2 là người bán và bàn duyệt của sàn. Số [1]–[4] là chỗ Nghi chụp và chú thích ở §5.2.
+Sơ đồ đã chốt: Màn 1 là chat người mua; Màn 2 là người bán và bàn duyệt của sàn. Số [1]–[4] là chỗ đánh số và chú thích ở §5.2.
 
 - **Tự làm — `yeu_cau_bang_chung`:** AI gửi form checklist ngay trong chat Màn 1, không có hộp chờ duyệt. Hoàn tác: không có, vì tin đã tới. Giảm hại bằng điều kiện ở §4.1 (một form, không hỏi lại mục đã gửi).
 - **Tự làm — `chuyen_truong_nhom`:** nút "Gặp nhân viên hỗ trợ" ở **[2]**. Trên prototype, cạnh nút **[2]** có nút hoàn tác (đảo được lời gọi `chuyen_truong_nhom`). Phía người, trưởng nhóm cũng có thể trả hồ sơ. Ca lạ không thuộc luồng trả hàng/hoàn tiền cũng đi nút này.
@@ -271,7 +269,7 @@ Sơ đồ đã chốt (`plan.md` §4.4): Màn 1 là chat người mua; Màn 2 l�
 - Vì sao: người mua biết còn chờ shop bao lâu và còn bao nhiêu ngày để gửi yêu cầu trả hàng. Đề yêu cầu nói rõ thời hạn; track không cấp số ngày chính thức nên mọi số trên UI đều gắn nhãn dựng.
 - Loại (a): không biết phải chờ đến khi nào. Loại (b): lấy 15 ngày như trang trợ giúp thật rồi ghi thành cam kết của prototype, không gắn nhãn dựng, là bịa. Cửa sổ 15 ngày chỉ được hiện khi đã nói rõ là dữ liệu dựng trong bài.
 
-## §6. Tốt là gì  (chặng 6) · *Nghi*
+## §6. Tốt là gì  (chặng 6)
 
 ### 6.1 Ba tiêu chí Pass/Fail
 
@@ -291,7 +289,6 @@ Sơ đồ đã chốt (`plan.md` §4.4): Màn 1 là chat người mua; Màn 2 l�
 ### 6.3 Lỗi / giới hạn còn lại
 - Prototype cố định theo kịch bản mẫu; câu hỏi tự do ngoài kịch bản chưa sâu (Known limitation).  
 - Số giờ đếm ngược trên UI là **dữ liệu dựng** minh hoạ — track không cấp SLA số ngày/giờ chính thức.  
-- Ảnh `screenshot*.png` cần gắn sau khi HTML chạy được (điểm họp lại).
 
 ## §7. Demo
 

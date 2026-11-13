@@ -28,3 +28,12 @@ _agy-out-deadline.txt
 _agy-err-deadline.txt
 _capture-previews.mjs
 _capture-report.json
+
+# Working files — not part of the submitted tree
+plan.md
+Ha-plan.md
+Nghi-plan.md
+An-plan.md
+prototype/ai-copy.md
+prototype/_preview*.png
+demo-script.md

@@ -8,15 +8,13 @@
 
 Lớp: L3B · Track: T4 · Nhóm: nhomANH · Hạn nộp: 23:59 ngày 13/11/2026 (Asia/Saigon)
 
-> **Lưu ý:** Tên và mã học viên còn thiếu — điền trước khi nộp. Một trong ba thành viên là **Hà Lê**. Phân công đề xuất theo bài mẫu L3A (có thể đổi sau khi biết tên).
+> **Lưu ý:** Mã học viên còn thiếu — điền trước khi nộp. Cả nhóm chốt §1 trong buổi thảo luận chung (`plan.md`); sau đó mỗi người làm task riêng theo file của mình.
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Thành viên A (điền tên; một trong ba người là Hà Lê) | (điền mã) | S2, S5 & prototype (main) |
-| Thành viên B (điền tên) | (điền mã) | S3, S5 (sub), S6 |
-| Thành viên C (điền tên) | (điền mã) | S4, S5 (sub), S7 |
-
-Cả nhóm cùng làm §1. Chi tiết checklist từng người: xem `plan.md`.
+| Hà | (điền mã) | S2, S5.1 & prototype (main) — xem `Ha-plan.md` |
+| Nghi | (điền mã) | S3, S5.2, S6 — xem `Nghi-plan.md` |
+| An | (điền mã) | S4, S5.3–5.4, S7 — xem `An-plan.md` |
 
 ## §1. Lát cắt & phạm vi
 - Lát cắt (chép từ track).

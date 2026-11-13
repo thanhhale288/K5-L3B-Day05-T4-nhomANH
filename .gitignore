@@ -23,3 +23,8 @@ _agy-out-markers.txt
 _agy-err-markers.txt
 _agy-out-ca1-draft.txt
 _agy-err-ca1-draft.txt
+_agy-prompt-deadline.md
+_agy-out-deadline.txt
+_agy-err-deadline.txt
+_capture-previews.mjs
+_capture-report.json

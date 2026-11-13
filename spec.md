@@ -80,19 +80,21 @@ Hai kịch bản đắt nhất (chốt ở `plan.md` / §2): **Ca 1 = kịch b�
 **Người dùng thấy gì:**  
 - Thẻ đối chiếu **[1]**: “Mô tả lúc đặt: dung tích nồi 6L” vs “Mô tả hiện tại: thể tích phủ bì 6L, lòng nồi 5L” (UI gọi là thẻ Snapshot lúc đặt — quy ước hiển thị của nhóm, không phải trường có sẵn trong track).  
 - Dòng trạng thái: `[Đã chuyển Chuyên viên xử lý ưu tiên]`.  
+- Nhãn nháp hoàn tiền (`ca1_refund_draft_note`): “Đã lập đề xuất hoàn tiền — chờ nhân viên sàn duyệt” (1.250.000 đ, chờ duyệt trên Màn 2).  
 - Nút **[2]** `[Gặp nhân viên hỗ trợ]` / `[Xem chi tiết hồ sơ]`.  
 - Huy hiệu AI **[3]** — không có nút “Hoàn ngay” / “Từ chối khiếu nại”.
+- Nhãn hạn gửi yêu cầu trả hàng **[3]** (`return_window_label`): còn X ngày đến 23/11/2026, kèm chú thích cửa sổ 15 ngày từ ngày đơn 08/11/2026 là dữ liệu dựng của nhóm, không phải chính sách Shopee thật.
 
 **Làm gì tiếp:** Theo dõi hồ sơ; bổ sung ảnh đo lòng nồi nếu muốn; bấm gặp nhân viên.  
-**Nếu không làm gì:** Hồ sơ vẫn ở trạng thái đã chuyển chuyên viên — **không** tự `soan_hoan_tien` / `tu_choi_khieu_nai`.
+**Nếu không làm gì:** Hồ sơ đã chuyển chuyên viên kèm nháp `soan_hoan_tien` ở mức Cần người duyệt — **không** tự phê duyệt hoàn tiền / **không** tự `tu_choi_khieu_nai`.
 
 **Ai được báo, sau bao lâu:** Trưởng nhóm / chuyên viên nhận ngay qua `chuyen_truong_nhom`, kèm cờ “Mô tả sản phẩm có thể đã đổi sau khi đặt”. Người bán được báo có khiếu nại đang đối soát (không bị đóng đơn một phía).
 
 **Quyết định UX (đủ 4 ý):**  
-- *Cân nhắc:* (a) hỏi lại một câu · (b) trả lời kèm giới hạn rồi để buyer tự gửi yêu cầu · (c) dừng và chuyển chuyên viên (`chuyen_truong_nhom`).  
-- *Chọn:* **(c) chuyển chuyên viên**, đồng thời hiện thẻ đối chiếu hai phiên bản mô tả.  
-- *Vì sao:* Mâu thuẫn **nguồn sự thật** (mô tả lúc đặt vs hiện tại) — AI không có thẩm quyền kết luận shop gian lận hay tự chốt tiền; `tu_choi_khieu_nai` / `soan_hoan_tien` đảo khó.  
-- *Loại:* (a) hỏi lại — khách đã nêu đủ lệch số; hỏi thêm không tạo căn cứ pháp lý. (b) chỉ trả lời kèm giới hạn — không chặn được nếu AI (hoặc bước sau) vẫn neo mô tả hiện tại để từ chối.
+- *Cân nhắc:* (a) hỏi lại một câu · (b) trả lời kèm giới hạn rồi để buyer tự gửi yêu cầu · (c) dừng và chuyển chuyên viên (`chuyen_truong_nhom`) · (d) tự xuất tiền qua `soan_hoan_tien`.  
+- *Chọn:* **(c) chuyển chuyên viên** và lập nháp `soan_hoan_tien` ở mức **Cần người duyệt**, đồng thời hiện thẻ đối chiếu hai phiên bản mô tả.  
+- *Vì sao:* Mâu thuẫn **nguồn sự thật** (mô tả lúc đặt vs hiện tại) đã thấy rõ, nhưng AI không có thẩm quyền tự kết luận shop gian lận hay tự xuất tiền; `tu_choi_khieu_nai` / `soan_hoan_tien` đảo khó nên chỉ lập phiếu chờ chuyên viên duyệt.  
+- *Loại:* (a) hỏi lại — khách đã nêu đủ lệch số; hỏi thêm không tạo căn cứ pháp lý. (b) chỉ trả lời kèm giới hạn — không chặn được nếu AI (hoặc bước sau) vẫn neo mô tả hiện tại để từ chối. (d) tự xuất tiền — “Khó: tiền đã về người mua”, không thu hồi được.
 
 **Loại lỗi:** **Ngữ cảnh (context error)** — hệ thống “so khớp” có thể chạy đúng thuật toán nhưng neo **sai mốc thời gian** của mô tả (hiện tại thay vì lúc đặt). Cách nói: thừa nhận đã thấy lệch hai bản, không đổ lỗi buyer. Cách sửa: **thiết kế bắt buộc hiện Snapshot lúc đặt + chuyển người**, không chỉ đổi wording.
 
@@ -106,6 +108,7 @@ Hai kịch bản đắt nhất (chốt ở `plan.md` / §2): **Ca 1 = kịch b�
 
 **Người dùng thấy gì:**  
 - Đồng hồ / dòng thời hạn phản hồi shop **[3]** (số giờ là dữ liệu dựng giả lập UI — track không cấp số ngày/giờ chính thức).  
+- Nhãn hạn gửi yêu cầu trả hàng **[3]** (`return_window_label`): còn X ngày đến 23/11/2026; chú thích rõ cửa sổ 15 ngày từ ngày đơn 08/11/2026 là dữ liệu dựng, không phải chính sách Shopee thật.  
 - Không có nút hoàn tức thì; có `[Gửi thêm bằng chứng]`, **[2]** `[Gặp nhân viên hỗ trợ]`.  
 - Thanh tiến trình: Đã nhận khiếu nại → Đang chờ shop phản hồi.
 
@@ -133,7 +136,7 @@ Hai kịch bản đắt nhất (chốt ở `plan.md` / §2): **Ca 1 = kịch b�
 |---|---|
 | **G11** Make clear why | **[1]** Thẻ đối chiếu mô tả lúc đặt vs mô tả hiện tại / ảnh thực tế |
 | **G10** Scope when in doubt | **[2]** Không tự phán tiền; nút `chuyen_truong_nhom` / Gặp nhân viên |
-| **G1/G2** + PAIR Trust | **[3]** Huy hiệu Trợ lý AI + thời hạn phản hồi còn lại (minh bạch năng lực & tiến trình) |
+| **G1/G2** + PAIR Trust | **[3]** Huy hiệu Trợ lý AI + thời hạn phản hồi shop còn lại + nhãn hạn gửi yêu cầu trả hàng (dữ liệu dựng, không phải chính sách Shopee thật) |
 
 ---
 
@@ -192,9 +195,9 @@ Tách bước (luật thêm, không phải tool trong đề):
 ### 4.3. Thử mức đã đặt trên 3 kịch bản
 
 **Đắt nhất #1 — §2 kịch bản #1: người bán sửa mô tả sau khi bán** (tin mồi nồi 6 lít; dữ liệu dựng của nhóm: lúc đặt "6L", mô tả hiện tại "phủ bì 6L, lòng nồi 5L").
-- Cái sai có bị chặn không? Có. `tu_choi_khieu_nai` không tự chạy khi AI chỉ thấy mô tả hiện tại. AI gọi `chuyen_truong_nhom` (Tự làm) kèm hai phiên bản mô tả.
-- Còn việc nào làm khi lẽ ra phải hỏi? Không. AI không chốt bên nào thắng.
-- Người dùng bình thường có phải chờ vô ích không? Không. Thẻ đối chiếu hiện ngay; hồ sơ được chuyển, không chờ duyệt từng câu hỏi.
+- Cái sai có bị chặn không? Có. `tu_choi_khieu_nai` không tự chạy khi AI chỉ thấy mô tả hiện tại. AI gọi `chuyen_truong_nhom` (Tự làm) kèm hai phiên bản mô tả, và lập nháp `soan_hoan_tien` ở mức **Cần người duyệt** (1.250.000 đ, chờ chuyên viên bấm — không tự xuất tiền).
+- Còn việc nào làm khi lẽ ra phải hỏi? Không tự chốt bên nào thắng và không tự chuyển tiền. Việc xuất tiền vẫn phải hỏi người: nháp nằm ở Màn 2 chờ duyệt.
+- Người dùng bình thường có phải chờ vô ích không? Không. Thẻ đối chiếu hiện ngay; hồ sơ được chuyển; khách không chờ duyệt từng câu hỏi, chỉ chờ một lượt duyệt nháp hoàn nếu chuyên viên đồng ý.
 
 **Đắt nhất #2 — §2 kịch bản #7: doạ bóc phốt nếu không hoàn trong 2 tiếng.**
 - Cái sai có bị chặn không? Có. `soan_hoan_tien` khoá đến khi nhân viên duyệt. Lời doạ không phải căn cứ.
@@ -219,7 +222,7 @@ Không cam kết số phút hay số ngày chính thức. Đề không cấp s�
 ### §5.1. File, công cụ, phần mock *(Hà)*
 - File: `prototype/index.html` — mở bằng double-click (hoặc kéo vào Chrome/Safari), không cần bước build hay `node_modules`.
 - Công cụ: HTML + React 18.3.1 UMD + Ant Design 5.22.7 (kèm `reset.css`) + dayjs 1.11.13 + @ant-design/icons 5.5.2 + @babel/standalone 7.26.10, tải qua CDN jsDelivr (đã pin phiên bản; URL đã kiểm tra HTTP 200). JSX viết inline, biên dịch trên trình duyệt. Giao diện desktop (3 cột), token cam Shopee `#EE4D2D`. Dựng bằng `agy` (Gemini 3.8 Flash High).
-- Phần mock: toàn bộ dữ liệu đơn hàng (tên người, shop, mã đơn, giá), tin nhắn, thẻ đối chiếu mô tả lúc đặt / mô tả hiện tại, đồng hồ hạn phản hồi người bán, bằng chứng shop, trạng thái 5 tool. Chi tiết nồi 6L vs 5L và số giờ đếm ngược là dữ liệu dựng của nhóm. "Snapshot lúc đặt" là quy ước hiển thị UI, không phải trường có trong đề bài.
+- Phần mock: toàn bộ dữ liệu đơn hàng (tên người, shop, mã đơn, giá), tin nhắn, thẻ đối chiếu mô tả lúc đặt / mô tả hiện tại, đồng hồ hạn phản hồi người bán, nhãn hạn gửi yêu cầu trả hàng (cửa sổ 15 ngày dựng từ ngày đơn 08/11/2026 đến 23/11/2026; copy `return_window_label` / `return_window_disclaimer` nói rõ không phải chính sách Shopee thật), bằng chứng shop, trạng thái 5 tool. Chi tiết nồi 6L vs 5L và số giờ đếm ngược là dữ liệu dựng của nhóm. "Snapshot lúc đặt" là quy ước hiển thị UI, không phải trường có trong đề bài.
 - Lời gọi AI thật: **không**. Không fetch API, không hardcode API key.
 
 ### §5.2 Ảnh đánh số · *Nghi*
@@ -230,7 +233,7 @@ Không cam kết số phút hay số ngày chính thức. Đề không cấp s�
 |---|---|---|---|
 | **[1]** | Thẻ đối chiếu “mô tả lúc đặt” vs “mô tả hiện tại” / ảnh khách (Ca #1 nồi 6L) | **G11** | AI tự phân tích & hiện căn cứ (không tự chốt tiền) |
 | **[2]** | Nút “Gặp nhân viên hỗ trợ” / trạng thái đã `chuyen_truong_nhom` | **G10** | `chuyen_truong_nhom` = **Tự làm** |
-| **[3]** | Huy hiệu “Trợ lý AI” + dòng thời hạn phản hồi shop còn lại | **G1/G2**, Rubric T4 #8 | Minh bạch: AI hỗ trợ đối soát, không hứa hoàn tức thì |
+| **[3]** | Huy hiệu “Trợ lý AI” + đồng hồ hạn phản hồi shop + nhãn hạn gửi yêu cầu trả hàng (dữ liệu dựng, không phải chính sách Shopee thật) | **G1/G2**, Rubric T4 #8 | Minh bạch: AI hỗ trợ đối soát, không hứa hoàn tức thì; cửa sổ trả hàng được gắn nhãn dựng |
 | **[4]** | Màn người bán: hạn đối chất + nút gửi chứng; khung nhân viên duyệt đề xuất hoàn | PAIR Trust · thể hiện mức duyệt | `soan_hoan_tien` = **Cần người duyệt**; không có nút `phat_shop` |
 
 ### §5.3. Mức tự chủ trông thế nào trên màn hình
@@ -238,7 +241,7 @@ Không cam kết số phút hay số ngày chính thức. Đề không cấp s�
 Sơ đồ đã chốt (`plan.md` §4.4): Màn 1 là chat người mua; Màn 2 là người bán và bàn duyệt của sàn. Số [1]–[4] là chỗ Nghi chụp và chú thích ở §5.2.
 
 - **Tự làm — `yeu_cau_bang_chung`:** AI gửi form checklist ngay trong chat Màn 1, không có hộp chờ duyệt. Hoàn tác: không có, vì tin đã tới. Giảm hại bằng điều kiện ở §4.1 (một form, không hỏi lại mục đã gửi).
-- **Tự làm — `chuyen_truong_nhom`:** nút "Gặp nhân viên hỗ trợ" ở **[2]**. Hoàn tác nằm ở phía người: trưởng nhóm trả hồ sơ, trạng thái chat đổi lại, không phải nút Undo của khách. Ca lạ không thuộc luồng trả hàng/hoàn tiền cũng đi nút này.
+- **Tự làm — `chuyen_truong_nhom`:** nút "Gặp nhân viên hỗ trợ" ở **[2]**. Trên prototype, cạnh nút **[2]** có nút hoàn tác (đảo được lời gọi `chuyen_truong_nhom`). Phía người, trưởng nhóm cũng có thể trả hồ sơ. Ca lạ không thuộc luồng trả hàng/hoàn tiền cũng đi nút này.
 - **Cần người duyệt — `soan_hoan_tien` và `tu_choi_khieu_nai`:** không có nút xuất tiền hay đóng khiếu nại trên chat người mua. Trên Màn 2, vị trí **[4]**, nhân viên thấy ảnh, thẻ Snapshot lúc đặt, phản hồi shop và phiếu AI, rồi bấm `[Phê duyệt hoàn tiền]` hoặc `[Từ chối khiếu nại]` hoặc `[Yêu cầu bổ sung]`. Quá hạn: tiền giữ tạm giữ, không tự bấm hộ (§4.1).
 - **Cấm — `phat_shop`:** không có nút trừ điểm hay khoá shop trên cả hai màn. Khách đòi khoá shop thì AI nói luồng này chỉ xử lý trả hàng/hoàn tiền và đưa đường `chuyen_truong_nhom` (**[2]**).
 
@@ -254,7 +257,7 @@ Sơ đồ đã chốt (`plan.md` §4.4): Màn 1 là chat người mua; Màn 2 l�
 - Đã cân nhắc: (a) AI tự gọi `soan_hoan_tien` rồi đưa nút Hoàn tác; (b) nhân viên xác nhận trước khi tiền chuyển.
 - Chọn: (b) cho cả `soan_hoan_tien` và `tu_choi_khieu_nai`. Trên màn hình là khung **[4]**, chưa bấm thì tiền chưa đi.
 - Vì sao: bảng tool ghi "Khó: tiền đã về người mua" và "Khó: tiền đã về người bán". Thu hồi ví bên thứ ba không phải Undo.
-- Loại (a): hoàn tác sau không áp được cho khoản đã giải ngân.
+- Loại (a): hoàn tác sau không áp được cho khoản đã giải ngân. (Nút hoàn tác ở **[2]** chỉ đảo `chuyen_truong_nhom`, không áp cho tiền đã chuyển.)
 
 **3. Hai màn hình (người mua / người bán và sàn), không một khung chat.**
 - Đã cân nhắc: (a) chỉ chat người mua; (b) hai tab — Màn 1 người mua, Màn 2 người bán và bàn duyệt.
@@ -262,11 +265,11 @@ Sơ đồ đã chốt (`plan.md` §4.4): Màn 1 là chat người mua; Màn 2 l�
 - Vì sao: hoàn sai thì người bán thua, từ chối sai thì người mua thua. Một chiều không cho người bán được nghe và không cho thấy ai bấm tiền.
 - Loại (a): không hiện được quyền đối chất (rubric riêng T4, ý 3) và mức Cần duyệt.
 
-**4. Thời hạn là đồng hồ đếm ngược có chú thích dữ liệu dựng, không phải SLA bịa.**
-- Đã cân nhắc: (a) câu tĩnh "Shop sẽ phản hồi sớm"; (b) cam kết cứng kiểu "24 giờ" hoặc "15 ngày"; (c) đồng hồ còn lại kèm dòng "dữ liệu dựng giả lập".
-- Chọn: (c), vị trí **[3]** (HAX G1/G2 và rubric T4 ý 8).
-- Vì sao: người mua biết còn chờ bao lâu. Đề chỉ yêu cầu nói rõ thời hạn và còn bao lâu, không cấp số ngày dựng.
-- Loại (a): không biết phải chờ đến khi nào. Loại (b): 15 ngày là trang trợ giúp thật, đề ghi là chính sách khác bài; ghi thành cam kết của prototype là bịa.
+**4. Thời hạn là đồng hồ đếm ngược và nhãn hạn trả hàng, đều có chú thích dữ liệu dựng, không phải SLA bịa.**
+- Đã cân nhắc: (a) câu tĩnh "Shop sẽ phản hồi sớm"; (b) cam kết cứng kiểu "24 giờ" hoặc "15 ngày" như chính sách Shopee thật; (c) đồng hồ còn lại kèm dòng "dữ liệu dựng giả lập", cộng nhãn hạn gửi yêu cầu trả hàng tính từ ngày đơn giả.
+- Chọn: (c), vị trí **[3]** (HAX G1/G2 và rubric T4 ý 8). Đồng hồ: thời hạn phản hồi người bán (số giờ dựng). Nhãn riêng (`return_window_label`): "Hạn gửi yêu cầu trả hàng: còn X ngày (đến 23/11/2026)", với X tính từ cửa sổ 15 ngày dựng kể từ ngày đơn 08/11/2026; chú thích (`return_window_disclaimer`) nói rõ đây là dữ liệu dựng của nhóm trong bài, không phải chính sách Shopee thật.
+- Vì sao: người mua biết còn chờ shop bao lâu và còn bao nhiêu ngày để gửi yêu cầu trả hàng. Đề yêu cầu nói rõ thời hạn; track không cấp số ngày chính thức nên mọi số trên UI đều gắn nhãn dựng.
+- Loại (a): không biết phải chờ đến khi nào. Loại (b): lấy 15 ngày như trang trợ giúp thật rồi ghi thành cam kết của prototype, không gắn nhãn dựng, là bịa. Cửa sổ 15 ngày chỉ được hiện khi đã nói rõ là dữ liệu dựng trong bài.
 
 ## §6. Tốt là gì  (chặng 6) · *Nghi*
 

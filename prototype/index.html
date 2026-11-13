@@ -210,13 +210,23 @@
     .deadline-banner {
       background: #FFFBE6;
       border-bottom: 1px solid #FFE58F;
-      padding: 8px 16px;
+      padding: 7px 16px;
       font-size: 12.5px;
       color: #D46B08;
       display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .deadline-banner-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
+      gap: 12px;
+    }
+    .deadline-banner-divider {
+      border-top: 1px dashed #FFE58F;
+      padding-top: 5px;
     }
 
     .chat-body {
@@ -393,8 +403,24 @@
       ClockCircleOutlined, CheckCircleOutlined, CloseCircleOutlined,
       UndoOutlined, AuditOutlined, ExclamationCircleOutlined,
       SafetyCertificateOutlined, FileTextOutlined, InfoCircleOutlined,
-      CheckOutlined, StopOutlined, ArrowRightOutlined
+      CheckOutlined, StopOutlined, ArrowRightOutlined, CalendarOutlined
     } = icons;
+
+    /**
+     * TÍNH TOÁN CỬA SỔ CHÍNH SÁCH 15 NGÀY (Rubric T4 ý 8 - Dữ liệu dựng của nhóm)
+     * Ngày đơn giả: 08/11/2026 -> Hạn chót: 23/11/2026 00:00 (local time)
+     */
+    const getReturnWindowInfo = () => {
+      const targetDate = new Date(2026, 10, 23, 0, 0, 0); // 23/11/2026 00:00 local
+      const now = new Date();
+      const diffMs = targetDate.getTime() - now.getTime();
+      const days = diffMs > 0 ? Math.ceil(diffMs / (1000 * 60 * 60 * 24)) : 0;
+      const label = days > 0
+        ? `Hạn gửi yêu cầu trả hàng: còn ${days} ngày (đến 23/11/2026)`
+        : "Hạn gửi yêu cầu trả hàng: đã hết hạn (đến 23/11/2026)";
+      return { days, label };
+    };
+    const returnWindowInfo = getReturnWindowInfo();
 
     /**
      * BẢNG COPY AI DUY NHẤT (Nguồn sự thật ngôn ngữ — nguyên văn từ ai-copy.md của Nghi)
@@ -409,6 +435,8 @@
       chip_gui_them_chung: "Gửi thêm bằng chứng",
       chip_xem_tien_trinh: "Xem tiến trình đối soát",
       footer_ai: "Được tạo bởi AI", // Key UI cần nhưng ai-copy.md không có; giữ đúng nhãn Shopee chuẩn
+      return_window_label: returnWindowInfo.label,
+      return_window_disclaimer: "Cửa sổ 15 ngày tính từ ngày đơn 08/11/2026 là dữ liệu dựng của nhóm trong bài, không phải chính sách Shopee thật.",
 
       // Ca 1 — Kịch bản #1 · Shop sửa mô tả (Nồi 6L) · DEMO CHÍNH
       ca1_user_msg: "Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Không đúng mô tả.",
@@ -655,7 +683,7 @@
       const [escalated, setEscalated] = useState(true);
 
       // Trạng thái đề xuất hoàn tiền: 'none' | 'pending' | 'approved' | 'rejected' | 'requested_more'
-      // Quyết định mới của Hà: Ở Ca #1, AI lập nháp soan_hoan_tien ở mức 'pending' (Chờ duyệt). Ca #7 và #8 là 'none'.
+      // Ở Ca #1: AI lập nháp soan_hoan_tien ở mức 'pending' (Chờ duyệt). Ca #7 và #8 mặc định là 'none'.
       const [refundState, setRefundState] = useState("pending");
 
       // Bằng chứng người bán đã nộp tại Màn 2
@@ -897,18 +925,34 @@
                   </div>
                 </div>
 
-                {/* Banner thời hạn đếm ngược phản hồi người bán (Marker [3]) */}
+                {/* Banner thời hạn phản hồi người bán & Hạn trả hàng (Marker [3] - Rubric T4 ý 8) */}
                 <div className="deadline-banner">
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <AnnotMarker id="3" />
-                    <ClockCircleOutlined />
-                    <span>
-                      {AI_COPY.ca7_deadline_prefix}
-                      <strong>{formatCountdown(countdownSeconds)}</strong>
-                      {AI_COPY.ca7_deadline_suffix}
+                  {/* Dòng 1: Thời hạn người bán phản hồi */}
+                  <div className="deadline-banner-row">
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <AnnotMarker id="3" />
+                      <ClockCircleOutlined />
+                      <span>
+                        {AI_COPY.ca7_deadline_prefix}
+                        <strong>{formatCountdown(countdownSeconds)}</strong>
+                        {AI_COPY.ca7_deadline_suffix}
+                      </span>
+                    </div>
+                    <Tag color="warning" style={{ fontSize: 10, margin: 0 }}>{AI_COPY.ca7_progress_2}</Tag>
+                  </div>
+
+                  {/* Dòng 2: Hạn gửi yêu cầu trả hàng chính sách 15 ngày (Rubric T4 ý 8) */}
+                  <div className="deadline-banner-row deadline-banner-divider" style={{ fontSize: 12, color: "#873800", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <CalendarOutlined style={{ color: "#D46B08", fontSize: 13 }} />
+                      <span>
+                        <strong>{AI_COPY.return_window_label}</strong>
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 10.5, color: "#AD4E00", fontStyle: "italic" }}>
+                      * {AI_COPY.return_window_disclaimer}
                     </span>
                   </div>
-                  <Tag color="warning" style={{ fontSize: 10, margin: 0 }}>Đang chờ shop đối chất</Tag>
                 </div>
 
                 {/* Nội dung tin nhắn chat */}
@@ -991,7 +1035,7 @@
                               </div>
                             </div>
 
-                            {/* Thông tin hồ sơ hoàn tiền nháp / đã duyệt (Quyết định của Hà) */}
+                            {/* Thông tin hồ sơ hoàn tiền nháp / đã duyệt */}
                             <div style={{
                               marginTop: 8,
                               padding: "7px 10px",
@@ -1164,7 +1208,7 @@
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <AnnotMarker id="2" />
                       <Text strong style={{ fontSize: 12, color: "#444" }}>
-                        Kênh hỗ trợ nhân viên sàn (Fallback khi nghi ngờ)
+                        Kênh hỗ trợ chuyên viên khiếu nại (Chuyển người khi nghi ngờ)
                       </Text>
                     </div>
                     <Text style={{ fontSize: 11, color: "#888" }}>
@@ -1246,10 +1290,10 @@
                     <Tag color="green">Tự làm</Tag>
                   </div>
                   <div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>
-                    Chuyển hồ sơ cho trưởng nhóm xử lý (HAX G10).
+                    Chuyển hồ sơ cho chuyên viên khiếu nại xử lý khi có nghi ngờ hoặc vượt thẩm quyền.
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888" }}>
-                    • Cái giá sai: <em>Đảo lại được (Undo / Graceful Fallback)</em><br />
+                    • Cái giá sai: <em>Đảo lại được (người mua có thể hoàn tác để tiếp tục trao đổi với AI)</em><br />
                     • Hiện tại: {escalated ? (
                       <Tag color="warning" style={{ fontSize: 10, margin: 0 }}>{AI_COPY.ca1_status}</Tag>
                     ) : (
@@ -1268,11 +1312,11 @@
                     <Tag color="volcano">Cần người duyệt</Tag>
                   </div>
                   <div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>
-                    Kích hoạt dòng tiền hoàn về tài khoản người mua.
+                    Khởi tạo đề xuất hoàn tiền về tài khoản người mua.
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888", marginBottom: 6 }}>
                     • Cái giá sai: <strong style={{ color: "#CF1322" }}>Khó: tiền đã về người mua</strong><br />
-                    • Quyết định mới Ca #1: <em>AI lập nháp soan_hoan_tien (Chờ duyệt)</em>. Chỉ xuất tiền khi Chuyên viên duyệt tại Màn 2.
+                    • Cơ chế kiểm soát: <em>AI chỉ lập phiếu nháp (Chờ duyệt)</em>. Dòng tiền chỉ giải ngân sau khi Chuyên viên sàn thẩm định và phê duyệt tại Màn 2.
                   </div>
 
                   <div style={{ background: "#FFFFFF", padding: "6px 8px", borderRadius: 4, border: "1px dashed #FFA39E" }}>
@@ -1298,7 +1342,7 @@
                     Đóng khiếu nại, tiền về ví người bán.
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888" }}>
-                    • Cái giá sai: <em>Khó: tiền đã về người bán</em> ("Từ chối cho chắc" cũng có người thua)<br />
+                    • Cái giá sai: <em>Khó: tiền đã về người bán</em> (từ chối vội vàng gây thiệt hại cho người mua)<br />
                     • Hiện tại: <Tag style={{ fontSize: 10, margin: 0 }}>Đóng băng — AI không tự phán quyết</Tag>
                   </div>
                 </div>
@@ -1353,6 +1397,7 @@
                     <div>• <strong>Người mua khiếu nại:</strong> <em>"{scenario === 1 ? AI_COPY.ca1_user_msg : (scenario === 7 ? AI_COPY.ca7_user_msg : AI_COPY.ca8_user_msg)}"</em></div>
                     <div>• <strong>Số tiền yêu cầu:</strong> <strong style={{ color: "var(--shopee-orange)" }}>{currentOrder.price}</strong></div>
                     <div>• <strong>Hạn phản hồi đếm ngược:</strong> <strong>{formatCountdown(countdownSeconds)}</strong> (dữ liệu dựng)</div>
+                    <div>• <strong>Chính sách đổi trả:</strong> {AI_COPY.return_window_label} <em>(dữ liệu dựng)</em></div>
                   </div>
                 </div>
 

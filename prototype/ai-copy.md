@@ -14,6 +14,8 @@
 | Nút **[2]** | `Gặp nhân viên hỗ trợ` |
 | Nút phụ | `Xem chi tiết hồ sơ` · `Gửi thêm bằng chứng` · `Xem tiến trình đối soát` |
 | Không có trên UI | `Hoàn tiền ngay` · `Từ chối khiếu nại` · `Phạt / khoá shop` |
+| Hạn trả hàng **[3]** (`return_window_label`) | `Hạn gửi yêu cầu trả hàng: còn X ngày (đến 23/11/2026)` — X tính từ hạn 23/11/2026 (ngày đơn giả 08/11/2026 + cửa sổ 15 ngày dựng) |
+| Chú thích hạn (`return_window_disclaimer`) | `Cửa sổ 15 ngày tính từ ngày đơn 08/11/2026 là dữ liệu dựng của nhóm trong bài, không phải chính sách Shopee thật.` |
 
 ---
 
@@ -41,8 +43,14 @@ Shopee đã tiếp nhận khiếu nại của bạn về sản phẩm Nồi chi�
 ```
 
 ### Tool gọi (logic, không hiện tên kỹ thuật cho user)
-- `chuyen_truong_nhom` — Tự làm  
-- Không gọi `tu_choi_khieu_nai` / `soan_hoan_tien`
+- `chuyen_truong_nhom` — Tự làm (chuyển hồ sơ cho chuyên viên)
+- `soan_hoan_tien` — Cần người duyệt (AI lập nháp đề xuất hoàn 1.250.000 đ, trạng thái "Chờ duyệt"; không tự xuất tiền)
+- Không gọi `tu_choi_khieu_nai`
+
+### Nhãn nháp hoàn tiền (key UI: `ca1_refund_draft_note`)
+```
+Đã lập đề xuất hoàn tiền — chờ nhân viên sàn duyệt
+```
 
 ---
 
@@ -122,8 +130,9 @@ Căn cứ đính kèm: thẻ mô tả lúc đặt · ảnh buyer · phản hồi
 
 ## Checklist Hà khi dán copy
 
-- [ ] Ca #1 hiện thẻ **[1]** + trạng thái chuyển chuyên viên + nút **[2]**  
+- [ ] Ca #1 hiện thẻ **[1]** + trạng thái chuyển chuyên viên + nút **[2]** + nhãn nháp hoàn tiền chờ duyệt (`ca1_refund_draft_note`: "Đã lập đề xuất hoàn tiền — chờ nhân viên sàn duyệt")  
 - [ ] Ca #7 hiện hạn **[3]** · không nút hoàn ngay  
+- [ ] Banner hạn có đồng hồ phản hồi shop **và** nhãn hạn gửi yêu cầu trả hàng (`return_window_label`) kèm `return_window_disclaimer` (dữ liệu dựng, không phải chính sách Shopee thật)  
 - [ ] Huy hiệu AI **[3]** luôn thấy  
 - [ ] Màn 2 có **[4]** nếu làm bonus  
 - [ ] Không có nút Phạt shop / Hoàn ngay trên chat buyer  

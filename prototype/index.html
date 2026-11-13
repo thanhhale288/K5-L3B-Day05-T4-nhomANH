@@ -68,7 +68,57 @@
       gap: 6px;
     }
 
-    /* Marker Badges [1] [2] [3] [4] */
+    /* Circular UX Markers for HAX / PAIR */
+    .annot-marker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 19px;
+      height: 19px;
+      min-width: 19px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      color: #FFFFFF;
+      cursor: help;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      vertical-align: middle;
+      outline: none;
+      user-select: none;
+      text-align: center;
+    }
+    .annot-marker:hover, .annot-marker:focus-visible {
+      transform: scale(1.18);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+    .annot-marker.hax {
+      background: #1677FF;
+      border: 1.5px solid #FFFFFF;
+    }
+    .annot-marker.pair {
+      background: #722ED1;
+      border: 1.5px solid #FFFFFF;
+    }
+    .annot-legend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FAFAFA;
+      border: 1px solid #D9D9D9;
+      border-radius: 14px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font-size: 11.5px;
+      color: #555;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .annot-legend-badge:hover, .annot-legend-badge:focus-visible {
+      background: #F0F5FF;
+      border-color: #ADC6FF;
+    }
     .marker-badge {
       display: inline-flex;
       align-items: center;
@@ -334,7 +384,7 @@
     const { useState, useEffect } = React;
     const {
       ConfigProvider, Layout, Card, Tag, Button, Tabs, Badge,
-      Alert, Space, Divider, Typography, Row, Col, Tooltip, Empty, Spin, Modal
+      Alert, Space, Divider, Typography, Row, Col, Tooltip, Empty, Spin, Modal, Popover
     } = antd;
     const { Text, Title, Paragraph } = Typography;
 
@@ -368,6 +418,7 @@
       ca1_compare_at_order: "Dung tích nồi: 6L",
       ca1_compare_current: "Thể tích phủ bì: 6L · Lòng nồi: 5L",
       ca1_status: "[Đã chuyển Chuyên viên xử lý ưu tiên]",
+      ca1_refund_draft_note: "Đã lập đề xuất hoàn tiền — chờ nhân viên sàn duyệt",
 
       // Ca 2 — Kịch bản #7 · Doạ bóc phốt · DEMO CHÍNH
       ca7_user_msg: "Áo nhận được màu khác xa hình. Trong 2 tiếng không hoàn tiền thì tôi đăng bài bóc phốt lên TikTok 500k view tẩy chay Shopee!",
@@ -434,6 +485,160 @@
       }
     };
 
+    /**
+     * BẢNG ĐỊNH NGHĨA CHÚ THÍCH HAX & PAIR
+     * Phục vụ popover khi hover các marker tròn [1] [2] [3] [4]
+     */
+    const ANNOTATIONS = {
+      1: {
+        id: "1",
+        framework: "HAX",
+        frameworkFull: "Microsoft Guidelines for Human-AI Interaction",
+        code: "HAX G11",
+        titleEn: "Make clear why the system did what it did",
+        color: "#1677FF",
+        bgTag: "blue",
+        explanation: "Thẻ đối chiếu 2 cột (Snapshot lúc đặt hàng vs Mô tả hiện tại) giúp người mua thấy rõ căn cứ khách quan vì sao AI nhận diện shop có dấu hiệu sửa thông tin sau khi bán."
+      },
+      2: {
+        id: "2",
+        framework: "HAX",
+        frameworkFull: "Microsoft Guidelines for Human-AI Interaction",
+        code: "HAX G10",
+        titleEn: "Scope services when in doubt",
+        color: "#1677FF",
+        bgTag: "blue",
+        explanation: "Khi nghi ngờ hoặc vụ việc nhạy cảm vượt thẩm quyền, AI chủ động thu hẹp phạm vi giải quyết và cung cấp đường tắt chuyển ngay cho nhân viên (chuyen_truong_nhom), có hỗ trợ nút hoàn tác."
+      },
+      3: {
+        id: "3",
+        framework: "HAX / PAIR",
+        frameworkFull: "Microsoft HAX (G1/G2) & Google PAIR Guidebook",
+        code: "HAX G1 / G2 & PAIR Trust",
+        titleEn: "Make clear what the system can do / how well",
+        color: "#1677FF",
+        bgTag: "blue",
+        explanation: "Minh bạch năng lực và giới hạn của AI (chỉ hỗ trợ đối soát, không tự hoàn tiền) kèm đồng hồ đếm ngược thời hạn người bán đối chất (Rubric T4 ý 8) và tiến trình 3 bước xử lý rõ ràng."
+      },
+      4: {
+        id: "4",
+        framework: "PAIR",
+        frameworkFull: "Google People + AI Guidebook",
+        code: "PAIR Trust",
+        titleEn: "PAIR Trust",
+        color: "#722ED1",
+        bgTag: "purple",
+        explanation: "Phân quyền tự chủ an toàn: soan_hoan_tien bắt buộc 'Cần người duyệt' (chuyên viên sàn thẩm định), mở kênh người bán gửi bằng chứng đối chất, nghiêm cấm AI tự động phat_shop."
+      }
+    };
+
+    /**
+     * Component Marker tròn [1] [2] [3] [4]
+     * Hover hoặc focus bằng phím hiện popover giải thích chuẩn HAX / PAIR
+     */
+    function AnnotMarker({ id, style = {} }) {
+      const item = ANNOTATIONS[id];
+      if (!item) return null;
+
+      const isPair = item.framework === "PAIR";
+      const markerBg = isPair ? "#722ED1" : "#1677FF";
+
+      const popoverContent = (
+        <div style={{ maxWidth: 280, padding: "2px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+            <Tag color={isPair ? "purple" : "blue"} style={{ margin: 0, fontWeight: 700, fontSize: 11 }}>
+              {item.framework}
+            </Tag>
+            <Text strong style={{ fontSize: 12.5, color: markerBg }}>
+              {item.code}
+            </Text>
+          </div>
+          <div style={{ fontSize: 11.5, color: "#666", fontStyle: "italic", marginBottom: 6 }}>
+            "{item.titleEn}"
+          </div>
+          <div style={{ fontSize: 10.5, color: "#8c8c8c", marginBottom: 6, borderBottom: "1px solid #F0F0F0", paddingBottom: 4 }}>
+            {item.frameworkFull}
+          </div>
+          <div style={{ fontSize: 12, lineHeight: 1.5, color: "#262626" }}>
+            {item.explanation}
+          </div>
+        </div>
+      );
+
+      return (
+        <Popover
+          content={popoverContent}
+          trigger={["hover", "focus"]}
+          placement="top"
+          overlayInnerStyle={{ padding: 12, borderRadius: 8 }}
+        >
+          <span
+            tabIndex={0}
+            role="button"
+            aria-label={`Chú thích ${item.framework} [${id}]`}
+            className={`annot-marker ${isPair ? 'pair' : 'hax'}`}
+            style={style}
+          >
+            {id}
+          </span>
+        </Popover>
+      );
+    }
+
+    /**
+     * Legend trên Top Navbar
+     * Hover hiện tóm tắt 2 bộ nguyên tắc HAX & PAIR
+     */
+    function FrameworkLegend() {
+      const legendContent = (
+        <div style={{ maxWidth: 300, padding: "2px 0" }}>
+          <Text strong style={{ display: "block", fontSize: 13, marginBottom: 8, color: "#262626" }}>
+            Khung thiết kế AI-UX & Mức tự chủ
+          </Text>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+              <span className="annot-marker hax" style={{ width: 16, height: 16, fontSize: 10 }}>H</span>
+              <Text strong style={{ color: "#1677FF", fontSize: 12 }}>Microsoft HAX Guidelines</Text>
+            </div>
+            <div style={{ fontSize: 11.5, color: "#555", lineHeight: 1.4 }}>
+              Bộ nguyên tắc tương tác Người - AI: [1] G11 (Minh bạch lý do), [2] G10 (Thu hẹp phạm vi khi nghi ngờ), [3] G1/G2 (Minh bạch năng lực & tiến trình).
+            </div>
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+              <span className="annot-marker pair" style={{ width: 16, height: 16, fontSize: 10 }}>P</span>
+              <Text strong style={{ color: "#722ED1", fontSize: 12 }}>Google PAIR Guidebook</Text>
+            </div>
+            <div style={{ fontSize: 11.5, color: "#555", lineHeight: 1.4 }}>
+              PAIR Trust: [4] Duyệt hoàn tiền Cần người duyệt (soan_hoan_tien), mở kênh người bán đối chất, cấm phạt shop tự động.
+            </div>
+          </div>
+        </div>
+      );
+
+      return (
+        <Popover
+          content={legendContent}
+          trigger={["hover", "focus"]}
+          placement="bottom"
+          overlayInnerStyle={{ padding: 12, borderRadius: 8 }}
+        >
+          <div tabIndex={0} className="annot-legend-badge">
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1677FF", display: "inline-block" }}></span>
+              <span style={{ fontWeight: 600, color: "#1677FF" }}>HAX</span>
+            </span>
+            <span style={{ color: "#D9D9D9" }}>|</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#722ED1", display: "inline-block" }}></span>
+              <span style={{ fontWeight: 600, color: "#722ED1" }}>PAIR</span>
+            </span>
+            <InfoCircleOutlined style={{ fontSize: 11, color: "#8c8c8c", marginLeft: 2 }} />
+          </div>
+        </Popover>
+      );
+    }
+
     function App() {
       // Tab hiện tại: 'buyer' (Màn 1) hoặc 'seller_platform' (Màn 2)
       const [activeTab, setActiveTab] = useState("buyer");
@@ -450,8 +655,8 @@
       const [escalated, setEscalated] = useState(true);
 
       // Trạng thái đề xuất hoàn tiền: 'none' | 'pending' | 'approved' | 'rejected' | 'requested_more'
-      // Theo ai-copy.md: Ở cả Ca 1, Ca 7, Ca 8, AI đều KHÔNG tự lập nháp soan_hoan_tien -> mặc định 'none'
-      const [refundState, setRefundState] = useState("none");
+      // Quyết định mới của Hà: Ở Ca #1, AI lập nháp soan_hoan_tien ở mức 'pending' (Chờ duyệt). Ca #7 và #8 là 'none'.
+      const [refundState, setRefundState] = useState("pending");
 
       // Bằng chứng người bán đã nộp tại Màn 2
       const [sellerEvidenceSubmitted, setSellerEvidenceSubmitted] = useState(false);
@@ -483,9 +688,9 @@
         setScenario(scenId);
 
         if (scenId === 1) {
-          // Ca 1: tự gọi chuyen_truong_nhom, không gọi soan_hoan_tien
+          // Ca 1: tự gọi chuyen_truong_nhom VÀ lập nháp soan_hoan_tien (Chờ duyệt)
           setEscalated(true);
-          setRefundState("none");
+          setRefundState("pending");
           setSellerEvidenceSubmitted(false);
         } else if (scenId === 7) {
           // Ca 7: yeu_cau_bang_chung, không soan_hoan_tien
@@ -532,8 +737,10 @@
               </Tag>
             </div>
 
-            {/* Màn 1 vs Màn 2 Selector */}
+            {/* Màn 1 vs Màn 2 Selector & Legend HAX / PAIR */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <FrameworkLegend />
+
               <Button
                 type={activeTab === "buyer" ? "primary" : "default"}
                 onClick={() => setActiveTab("buyer")}
@@ -547,7 +754,10 @@
                 onClick={() => setActiveTab("seller_platform")}
                 icon={<AuditOutlined />}
               >
-                <span className="marker-badge-inline">[4]</span> Màn 2: Người bán / Nhân viên duyệt [4] (Bonus)
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <AnnotMarker id="4" />
+                  Màn 2: Người bán / Nhân viên duyệt
+                </span>
               </Button>
             </div>
           </header>
@@ -678,15 +888,19 @@
                     </div>
                   </div>
 
-                  {/* Huy hiệu [3] nguyên văn từ ai-copy.md */}
-                  <span className="marker-badge">
-                    [3] {AI_COPY.badge_ai}
-                  </span>
+                  {/* Huy hiệu Badge AI kèm Marker [3] */}
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <AnnotMarker id="3" />
+                    <Tag color="orange" style={{ margin: 0, fontWeight: 600, fontSize: 11, padding: "2px 8px" }}>
+                      {AI_COPY.badge_ai}
+                    </Tag>
+                  </div>
                 </div>
 
                 {/* Banner thời hạn đếm ngược phản hồi người bán (Marker [3]) */}
                 <div className="deadline-banner">
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AnnotMarker id="3" />
                     <ClockCircleOutlined />
                     <span>
                       {AI_COPY.ca7_deadline_prefix}
@@ -746,13 +960,16 @@
                           {scenario === 8 && AI_COPY.ca8_ai_reply}
                         </div>
 
-                        {/* [1] HAX G11: Thẻ đối chiếu 2 cột Snapshot lúc đặt vs Hiện tại (Ca 1 & Ca 8) */}
+                        {/* Ca 1: Thẻ đối chiếu 2 cột Snapshot lúc đặt vs Hiện tại (Marker [1]) */}
                         {scenario === 1 && (
                           <div className="compare-card">
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <span className="marker-badge">
-                                [1] Thẻ đối chiếu (Snapshot lúc đặt — quy ước UI nhóm)
-                              </span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <AnnotMarker id="1" />
+                                <Text strong style={{ fontSize: 12.5, color: "#333" }}>
+                                  Thẻ đối chiếu căn cứ khiếu nại (Snapshot lúc đặt)
+                                </Text>
+                              </div>
                               <Tag color="error" style={{ fontWeight: 600, fontSize: 11 }}>
                                 {AI_COPY.ca1_status}
                               </Tag>
@@ -773,16 +990,52 @@
                                 <div>{AI_COPY.ca1_compare_current}</div>
                               </div>
                             </div>
+
+                            {/* Thông tin hồ sơ hoàn tiền nháp / đã duyệt (Quyết định của Hà) */}
+                            <div style={{
+                              marginTop: 8,
+                              padding: "7px 10px",
+                              background: refundState === "approved" ? "#FFF1F0" : (refundState === "rejected" ? "#F5F5F5" : "#FFFBE6"),
+                              border: refundState === "approved" ? "1px solid #FFA39E" : (refundState === "rejected" ? "1px solid #D9D9D9" : "1px solid #FFE58F"),
+                              borderRadius: 6,
+                              fontSize: 11.5,
+                              color: refundState === "approved" ? "#CF1322" : (refundState === "rejected" ? "#666" : "#D46B08"),
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 6
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <ClockCircleOutlined />
+                                <span>
+                                  <strong>Đề xuất hoàn ({ORDER_FIXTURES[1].price}):</strong>{" "}
+                                  {refundState === "approved"
+                                    ? "Chuyên viên sàn đã duyệt hoàn tiền (Khó: tiền đã về người mua)"
+                                    : (refundState === "rejected"
+                                      ? "Chuyên viên sàn đã từ chối đề xuất hoàn"
+                                      : (refundState === "requested_more"
+                                        ? "Chuyên viên sàn đã yêu cầu bổ sung bằng chứng"
+                                        : AI_COPY.ca1_refund_draft_note))}
+                                </span>
+                              </div>
+                              {refundState === "approved" && <Tag color="error" style={{ margin: 0, fontWeight: 700 }}>Đã duyệt hoàn</Tag>}
+                              {refundState === "pending" && <Tag color="warning" style={{ margin: 0, fontWeight: 700 }}>{AI_COPY.staff_proposal_pending}</Tag>}
+                              {refundState === "rejected" && <Tag color="default" style={{ margin: 0, fontWeight: 700 }}>Đã từ chối</Tag>}
+                              {refundState === "requested_more" && <Tag color="processing" style={{ margin: 0, fontWeight: 700 }}>Yêu cầu bổ sung</Tag>}
+                            </div>
                           </div>
                         )}
 
-                        {/* Ca 7: Khung 3 bước tiến trình nguyên văn từ ai-copy.md */}
+                        {/* Ca 7: Khung 3 bước tiến trình nguyên văn từ ai-copy.md (Marker [3]) */}
                         {scenario === 7 && (
                           <div className="progress-box">
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                              <span className="marker-badge">
-                                [3] Tiến trình đối soát khách quan
-                              </span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <AnnotMarker id="3" />
+                                <Text strong style={{ fontSize: 12.5, color: "#333" }}>
+                                  Tiến trình đối soát khách quan
+                                </Text>
+                              </div>
                               <Tag color="warning" style={{ fontSize: 10 }}>
                                 {AI_COPY.ca7_status}
                               </Tag>
@@ -802,13 +1055,16 @@
                           </div>
                         )}
 
-                        {/* Ca 8: Thẻ đối chiếu tem khớp */}
+                        {/* Ca 8: Thẻ đối chiếu tem khớp (Marker [1]) */}
                         {scenario === 8 && (
                           <div className="compare-card">
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <span className="marker-badge">
-                                [1] Thẻ đối chiếu chứng cứ shop
-                              </span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <AnnotMarker id="1" />
+                                <Text strong style={{ fontSize: 12.5, color: "#333" }}>
+                                  Thẻ đối chiếu chứng cứ người bán
+                                </Text>
+                              </div>
                               <Tag color="success" style={{ fontWeight: 600, fontSize: 11 }}>
                                 {AI_COPY.ca8_status}
                               </Tag>
@@ -902,28 +1158,34 @@
                   )}
                 </div>
 
-                {/* Footer Chat: Nút [2] HAX G10 nguyên văn "Gặp nhân viên hỗ trợ" */}
+                {/* Footer Chat: Nút Gặp nhân viên hỗ trợ (Marker [2]) */}
                 <div className="chat-footer">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <span className="marker-badge">
-                      [2] HAX G10: Thu hẹp phạm vi khi không chắc
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <AnnotMarker id="2" />
+                      <Text strong style={{ fontSize: 12, color: "#444" }}>
+                        Kênh hỗ trợ nhân viên sàn (Fallback khi nghi ngờ)
+                      </Text>
+                    </div>
                     <Text style={{ fontSize: 11, color: "#888" }}>
                       Tool: chuyen_truong_nhom (Tự làm · Hoàn tác được)
                     </Text>
                   </div>
 
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <Button
-                      type={escalated ? "primary" : "default"}
-                      danger={!escalated}
-                      icon={<CustomerServiceOutlined />}
-                      onClick={() => setEscalated(true)}
-                      disabled={escalated}
-                      style={{ fontWeight: 600 }}
-                    >
-                      {AI_COPY.meet_staff_btn}
-                    </Button>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <Button
+                        type={escalated ? "primary" : "default"}
+                        danger={!escalated}
+                        icon={<CustomerServiceOutlined />}
+                        onClick={() => setEscalated(true)}
+                        disabled={escalated}
+                        style={{ fontWeight: 600 }}
+                      >
+                        {AI_COPY.meet_staff_btn}
+                      </Button>
+                      <AnnotMarker id="2" />
+                    </div>
                     {escalated && (
                       <Button
                         type="dashed"
@@ -977,7 +1239,10 @@
                 {/* 2. chuyen_truong_nhom */}
                 <div className="tool-box">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                    <Text code strong style={{ fontSize: 11.5 }}>chuyen_truong_nhom</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Text code strong style={{ fontSize: 11.5 }}>chuyen_truong_nhom</Text>
+                      <AnnotMarker id="2" />
+                    </div>
                     <Tag color="green">Tự làm</Tag>
                   </div>
                   <div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>
@@ -996,7 +1261,10 @@
                 {/* 3. soan_hoan_tien */}
                 <div className="tool-box highlight">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                    <Text code strong style={{ fontSize: 11.5, color: "#CF1322" }}>soan_hoan_tien</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Text code strong style={{ fontSize: 11.5, color: "#CF1322" }}>soan_hoan_tien</Text>
+                      <AnnotMarker id="4" />
+                    </div>
                     <Tag color="volcano">Cần người duyệt</Tag>
                   </div>
                   <div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>
@@ -1004,16 +1272,16 @@
                   </div>
                   <div style={{ fontSize: 10.5, color: "#888", marginBottom: 6 }}>
                     • Cái giá sai: <strong style={{ color: "#CF1322" }}>Khó: tiền đã về người mua</strong><br />
-                    • Quy tắc copy Nghi: <em>AI KHÔNG tự lập nháp soan_hoan_tien</em> ở cả 3 ca. Chỉ chuyên viên duyệt tại Màn 2.
+                    • Quyết định mới Ca #1: <em>AI lập nháp soan_hoan_tien (Chờ duyệt)</em>. Chỉ xuất tiền khi Chuyên viên duyệt tại Màn 2.
                   </div>
 
                   <div style={{ background: "#FFFFFF", padding: "6px 8px", borderRadius: 4, border: "1px dashed #FFA39E" }}>
-                    <div style={{ fontSize: 11, marginBottom: 2 }}>Trạng thái dòng tiền:</div>
+                    <div style={{ fontSize: 11, marginBottom: 2 }}>Trạng thái dòng tiền (soan_hoan_tien):</div>
                     {refundState === "none" && <Tag style={{ fontSize: 10 }}>{AI_COPY.staff_proposal_none}</Tag>}
-                    {refundState === "pending" && <Tag color="warning" style={{ fontSize: 10 }}>{AI_COPY.staff_proposal_pending}</Tag>}
-                    {refundState === "approved" && <Tag color="error" style={{ fontSize: 10 }}>Đã duyệt hoàn tiền (Tiền đã về người mua)</Tag>}
-                    {refundState === "rejected" && <Tag color="default" style={{ fontSize: 10 }}>Đã từ chối đề xuất hoàn tiền</Tag>}
-                    {refundState === "requested_more" && <Tag color="processing" style={{ fontSize: 10 }}>Đã yêu cầu bổ sung bằng chứng</Tag>}
+                    {refundState === "pending" && <Tag color="warning" style={{ fontSize: 10, fontWeight: 700 }}>{AI_COPY.staff_proposal_pending}</Tag>}
+                    {refundState === "approved" && <Tag color="error" style={{ fontSize: 10, fontWeight: 700 }}>Đã duyệt hoàn tiền (Tiền đã về người mua)</Tag>}
+                    {refundState === "rejected" && <Tag color="default" style={{ fontSize: 10, fontWeight: 700 }}>Đã từ chối đề xuất hoàn tiền</Tag>}
+                    {refundState === "requested_more" && <Tag color="processing" style={{ fontSize: 10, fontWeight: 700 }}>Đã yêu cầu bổ sung bằng chứng</Tag>}
                   </div>
                   <div style={{ fontSize: 10, color: "#CF1322", marginTop: 4 }}>
                     * Không cho phép hoàn tiền tức thì từ khung chat (AI hoặc khách).
@@ -1052,12 +1320,13 @@
               </aside>
             </div>
           ) : (
-            /* ==================== MÀN 2: NGƯỜI BÁN & NHÂN VIÊN DUYỆT [4] ==================== */
+            /* ==================== MÀN 2: NGƯỜI BÁN & NHÂN VIÊN DUYỆT ==================== */
             <div className="screen-2-container">
               {/* PHẦN 1: GÓC NHÌN NGƯỜI BÁN */}
               <div className="screen-2-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AnnotMarker id="4" />
                     <ShopOutlined style={{ fontSize: 20, color: "var(--shopee-orange)" }} />
                     <Title level={5} style={{ margin: 0 }}>Kênh Người Bán (Shopee Seller Centre)</Title>
                   </div>
@@ -1089,9 +1358,12 @@
 
                 {/* Khu vực nộp bằng chứng của shop */}
                 <div style={{ borderTop: "1px dashed #E0E0E0", paddingTop: 12 }}>
-                  <Text strong style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
-                    BẰNG CHỨNG ĐỐI CHẤT CỦA SHOP:
-                  </Text>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <AnnotMarker id="4" />
+                    <Text strong style={{ fontSize: 12 }}>
+                      BẰNG CHỨNG ĐỐI CHẤT CỦA SHOP (Kênh phản hồi người bán):
+                    </Text>
+                  </div>
 
                   {sellerEvidenceSubmitted ? (
                     <div style={{ background: "#F6FFED", border: "1px solid #B7EB8F", borderRadius: 6, padding: 10 }}>
@@ -1108,55 +1380,77 @@
                       <Paragraph style={{ fontSize: 11.5, color: "#666", marginBottom: 8 }}>
                         Vui lòng gửi bằng chứng đối chất (ảnh/video đóng hàng, tem, mô tả lúc đặt nếu có) trước khi hết hạn.
                       </Paragraph>
-                      <Button
-                        type="primary"
-                        icon={<FileTextOutlined />}
-                        onClick={() => setSellerEvidenceSubmitted(true)}
-                      >
-                        {AI_COPY.seller_send_evidence_btn}
-                      </Button>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <Button
+                          type="primary"
+                          icon={<FileTextOutlined />}
+                          onClick={() => setSellerEvidenceSubmitted(true)}
+                        >
+                          {AI_COPY.seller_send_evidence_btn}
+                        </Button>
+                        <AnnotMarker id="4" />
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* PHẦN 2: KHUNG NHÂN VIÊN SÀN (DUYỆT soan_hoan_tien) [4] */}
+              {/* PHẦN 2: KHUNG NHÂN VIÊN SÀN (DUYỆT soan_hoan_tien) */}
               <div className="screen-2-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <AnnotMarker id="4" />
                     <AuditOutlined style={{ fontSize: 20, color: "#1677FF" }} />
                     <Title level={5} style={{ margin: 0 }}>Khung nhân viên sàn (duyệt soan_hoan_tien)</Title>
                   </div>
-                  <span className="marker-badge">
-                    [4] Màn Người bán / Nhân viên duyệt [4] (Bonus)
-                  </span>
+                  <Tag color="purple" style={{ fontWeight: 600, fontSize: 11 }}>
+                    PAIR Trust
+                  </Tag>
                 </div>
 
-                <div style={{ background: "#FAFAFA", border: "1px solid #ECECEC", borderRadius: 6, padding: 12 }}>
-                  <div style={{ fontSize: 12.5, color: "#333", lineHeight: 1.7 }}>
-                    <div>
-                      <strong>{AI_COPY.staff_proposal_label}</strong>
-                      {refundState === "none" && (
-                        <Tag color="default" style={{ fontWeight: 600 }}>{AI_COPY.staff_proposal_none}</Tag>
-                      )}
-                      {refundState === "pending" && (
-                        <Tag color="warning" style={{ fontWeight: 600 }}>{AI_COPY.staff_proposal_pending}</Tag>
-                      )}
-                      {refundState === "approved" && (
-                        <Tag color="error" style={{ fontWeight: 600 }}>Đã duyệt hoàn tiền</Tag>
-                      )}
-                      {refundState === "rejected" && (
-                        <Tag color="default" style={{ fontWeight: 600 }}>Đã từ chối</Tag>
-                      )}
-                      {refundState === "requested_more" && (
-                        <Tag color="processing" style={{ fontWeight: 600 }}>Yêu cầu bổ sung</Tag>
-                      )}
+                {refundState !== "none" ? (
+                  <div style={{ background: "#FAFAFA", border: "1px solid #ECECEC", borderRadius: 6, padding: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, borderBottom: "1px solid #F0F0F0", paddingBottom: 8 }}>
+                      <div>
+                        <strong>{AI_COPY.staff_proposal_label}</strong>
+                        {refundState === "pending" && (
+                          <Tag color="warning" style={{ fontWeight: 700, fontSize: 11.5 }}>{AI_COPY.staff_proposal_pending}</Tag>
+                        )}
+                        {refundState === "approved" && (
+                          <Tag color="error" style={{ fontWeight: 700, fontSize: 11.5 }}>Đã duyệt hoàn tiền</Tag>
+                        )}
+                        {refundState === "rejected" && (
+                          <Tag color="default" style={{ fontWeight: 700, fontSize: 11.5 }}>Đã từ chối đề xuất</Tag>
+                        )}
+                        {refundState === "requested_more" && (
+                          <Tag color="processing" style={{ fontWeight: 700, fontSize: 11.5 }}>Yêu cầu bổ sung</Tag>
+                        )}
+                      </div>
+                      <Tag color="volcano" style={{ fontWeight: 600, fontSize: 11 }}>Cần người duyệt</Tag>
                     </div>
-                    <div style={{ marginTop: 4, color: "#666" }}>
-                      <strong>{AI_COPY.staff_evidence_note}</strong>
+
+                    <div style={{ fontSize: 12.5, color: "#333", lineHeight: 1.8 }}>
+                      <div>• <strong>Số tiền đề xuất:</strong> <strong style={{ color: "var(--shopee-orange)", fontSize: 13.5 }}>{ORDER_FIXTURES[1].price}</strong> (đúng giá đơn giả Ca #1)</div>
+                      <div>• <strong>Lý do:</strong> mâu thuẫn mô tả lúc đặt (6L) vs mô tả hiện tại (phủ bì 6L, lòng 5L) — <em>dữ liệu dựng</em></div>
+                      <div>• <strong>Tóm tắt chứng cứ:</strong> thẻ mô tả lúc đặt · ảnh/khiếu nại buyer · {sellerEvidenceSubmitted ? "phản hồi shop đã gửi" : "(phản hồi shop nếu đã gửi)"}</div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div style={{ background: "#FAFAFA", border: "1px solid #ECECEC", borderRadius: 6, padding: 18, textAlign: "center" }}>
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <div style={{ fontSize: 12, color: "#666" }}>
+                          <strong>{AI_COPY.staff_proposal_label}</strong>
+                          <Tag color="default" style={{ fontWeight: 600, marginLeft: 6 }}>{AI_COPY.staff_proposal_none}</Tag>
+                          <div style={{ marginTop: 6, color: "#888" }}>
+                            Trợ lý AI chưa lập đề xuất hoàn tiền cho ca này (đang chờ thời hạn shop phản hồi hoặc chưa đủ căn cứ xác định sai mô tả).
+                          </div>
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
 
                 {/* 3 Nút nguyên văn từ ai-copy.md */}
                 <div style={{ border: "1px solid #E8E8E8", borderRadius: 8, padding: 14, background: "#FFF" }}>
@@ -1170,6 +1464,7 @@
                       icon={<CheckOutlined />}
                       style={{ background: "#389E0D", borderColor: "#389E0D" }}
                       onClick={() => setRefundState("approved")}
+                      disabled={refundState === "none" || refundState === "approved"}
                     >
                       {AI_COPY.staff_approve}
                     </Button>
@@ -1177,6 +1472,7 @@
                     <Button
                       icon={<InfoCircleOutlined />}
                       onClick={() => setRefundState("requested_more")}
+                      disabled={refundState === "none" || refundState === "requested_more"}
                     >
                       {AI_COPY.staff_request_more}
                     </Button>
@@ -1185,9 +1481,20 @@
                       danger
                       icon={<CloseCircleOutlined />}
                       onClick={() => setRefundState("rejected")}
+                      disabled={refundState === "none" || refundState === "rejected"}
                     >
                       {AI_COPY.staff_reject}
                     </Button>
+
+                    {refundState !== "pending" && scenario === 1 && (
+                      <Button
+                        type="dashed"
+                        icon={<UndoOutlined />}
+                        onClick={() => setRefundState("pending")}
+                      >
+                        Đặt lại về "Chờ duyệt"
+                      </Button>
+                    )}
                   </Space>
 
                   {/* Thông báo kết quả thao tác */}
@@ -1197,7 +1504,7 @@
                         type="error"
                         showIcon
                         message="ĐÃ PHÊ DUYỆT HOÀN TIỀN"
-                        description="Khó: tiền đã về người mua — không thể thu hồi. Sàn đã giải ngân theo hồ sơ đối soát."
+                        description="Khó: tiền đã về người mua — không thể thu hồi. Sàn đã giải ngân 1.250.000 đ theo hồ sơ đối soát (đã phản ánh sang Màn 1)."
                       />
                     )}
                     {refundState === "rejected" && (
@@ -1216,9 +1523,14 @@
                         description="Đã gửi thông báo yêu cầu cả hai bên bổ sung ảnh/video đối chất trong thời hạn."
                       />
                     )}
+                    {refundState === "pending" && (
+                      <div style={{ fontSize: 11.5, color: "#D46B08", background: "#FFFBE6", padding: "8px 10px", borderRadius: 4, border: "1px solid #FFE58F" }}>
+                        ⚠️ <strong>Đang chờ thẩm định:</strong> Nháp hoàn tiền 1.250.000 đ do AI khởi tạo đang đợi Chuyên viên sàn bấm duyệt. Tiền chưa xuất khỏi tài khoản Shopee.
+                      </div>
+                    )}
                     {refundState === "none" && (
                       <div style={{ fontSize: 11.5, color: "#888", fontStyle: "italic" }}>
-                        * Ở trạng thái bình thường: Trợ lý AI chưa lập đề xuất hoàn. Bấm 1 trong 3 nút trên để mô phỏng quyết định của Chuyên viên sàn.
+                        * Ở kịch bản này: Trợ lý AI chưa lập đề xuất hoàn tiền. Chuyên viên sàn có thể chủ động thẩm định khi nhận thêm chứng cứ.
                       </div>
                     )}
                   </div>
